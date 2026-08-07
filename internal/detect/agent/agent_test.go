@@ -125,3 +125,70 @@ func TestDetectWebviewKeepsClassFillsChrome(t *testing.T) {
 		t.Fatalf("agent = %q, want Chrome", state.AgentName)
 	}
 }
+
+func TestDetectSecurityStrong(t *testing.T) {
+	ua := "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) " +
+		"Gecko/20100101 Firefox/3.0.4"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if state.AgentSecurity != "Strong security" {
+		t.Fatalf("security = %q, want Strong security", state.AgentSecurity)
+	}
+}
+
+func TestDetectSecurityWeak(t *testing.T) {
+	ua := "Mozilla/5.0 (X11; I; Linux i686; en-US; rv:1.8.1) " +
+		"Gecko/20061010 Firefox/2.0"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if state.AgentSecurity != "Weak security" {
+		t.Fatalf("security = %q, want Weak security", state.AgentSecurity)
+	}
+}
+
+func TestDetectSecurityNone(t *testing.T) {
+	ua := "Mozilla/5.0 (Windows; N; Windows NT 5.1; en-US; rv:1.7.5) " +
+		"Gecko/20041107 Firefox/1.0"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if state.AgentSecurity != "No security" {
+		t.Fatalf("security = %q, want No security", state.AgentSecurity)
+	}
+}
+
+func TestDetectSecurityUnsetWithoutToken(t *testing.T) {
+	ua := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+		"(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if state.AgentSecurity != "" {
+		t.Fatalf("security = %q, want empty before finalize",
+			state.AgentSecurity)
+	}
+}
+
+func TestDetectSecurityDoesNotOverwrite(t *testing.T) {
+	ua := "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) " +
+		"Gecko/20100101 Firefox/3.0.4"
+	state := &detect.State{
+		UA:            ua,
+		Tokens:        tokenize.Parse(ua),
+		AgentSecurity: "Hacker",
+	}
+	New().Detect(state)
+	if state.AgentSecurity != "Hacker" {
+		t.Fatalf("security = %q, want Hacker preserved", state.AgentSecurity)
+	}
+}

@@ -52,6 +52,9 @@ func applyBot(state *detect.State, p *data.BotPattern) {
 	if p.DeviceClass != "" {
 		state.DeviceClass = p.DeviceClass
 	}
+	if p.AgentClass == "Hacker" || p.DeviceClass == "Hacker" {
+		state.AgentSecurity = "Hacker"
+	}
 	if state.EngineClass == "" {
 		switch p.AgentClass {
 		case "Robot", "Testclient", "Hacker", "Server", "Cloud Application":

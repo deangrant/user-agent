@@ -101,3 +101,37 @@ func TestDetectEmptyUA(t *testing.T) {
 	}
 	New().Detect(nil) // must not panic
 }
+
+func TestDetectHackerSetsSecurity(t *testing.T) {
+	ua := "sqlmap/1.4.2#stable (http://sqlmap.org)"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if !state.BotMatched {
+		t.Fatal("BotMatched = false, want true")
+	}
+	if state.AgentClass != "Hacker" {
+		t.Fatalf("agent class = %q, want Hacker", state.AgentClass)
+	}
+	if state.AgentSecurity != "Hacker" {
+		t.Fatalf("security = %q, want Hacker", state.AgentSecurity)
+	}
+}
+
+func TestDetectGooglebotLeavesSecurityEmpty(t *testing.T) {
+	ua := "Mozilla/5.0 (compatible; Googlebot/2.1; " +
+		"+http://www.google.com/bot.html)"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if !state.BotMatched {
+		t.Fatal("BotMatched = false, want true")
+	}
+	if state.AgentSecurity != "" {
+		t.Fatalf("security = %q, want empty for Robot", state.AgentSecurity)
+	}
+}

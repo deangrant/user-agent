@@ -62,6 +62,8 @@ func (d *Detector) Detect(state *detect.State) {
 	if state.BotMatched {
 		return
 	}
+	defer detectSecurity(state)
+
 	if state.AppMatched && state.AgentName != "" &&
 		state.AgentClass != "Browser" &&
 		state.AgentClass != "Browser Webview" {
@@ -77,6 +79,27 @@ func (d *Detector) Detect(state *detect.State) {
 		return
 	}
 	detectBrowser(state, false)
+}
+
+// detectSecurity sets AgentSecurity from classic Mozilla comment
+// encryption tokens (N/I/U). Does not overwrite a prior value.
+func detectSecurity(state *detect.State) {
+	if state.AgentSecurity != "" {
+		return
+	}
+	for _, c := range state.Tokens.Comments {
+		switch strings.ToUpper(strings.TrimSpace(c)) {
+		case "N":
+			state.AgentSecurity = "No security"
+			return
+		case "I":
+			state.AgentSecurity = "Weak security"
+			return
+		case "U":
+			state.AgentSecurity = "Strong security"
+			return
+		}
+	}
 }
 
 func detectBrowser(state *detect.State, webview bool) {

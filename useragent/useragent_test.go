@@ -31,6 +31,9 @@ func TestParseChromeDesktop(t *testing.T) {
 	if !r.IsDesktop() || r.IsBot() {
 		t.Fatalf("flags desktop=%v bot=%v", r.IsDesktop(), r.IsBot())
 	}
+	if r.AgentSecurity != useragent.AgentSecurityUnknown {
+		t.Fatalf("security = %q, want Unknown", r.AgentSecurity)
+	}
 }
 
 func TestParseAndroidChrome(t *testing.T) {
@@ -327,6 +330,18 @@ func TestParseNestedParensNoGarbageDeviceName(t *testing.T) {
 	}
 	if r.Agent.Name != "Chrome" {
 		t.Fatalf("agent = %q, want Chrome", r.Agent.Name)
+	}
+}
+
+func TestParseLegacyFirefoxStrongSecurity(t *testing.T) {
+	ua := "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) " +
+		"Gecko/20100101 Firefox/3.0.4"
+	r := useragent.Parse(ua)
+	if r.AgentSecurity != useragent.AgentSecurityStrong {
+		t.Fatalf("security = %q, want Strong security", r.AgentSecurity)
+	}
+	if r.Agent.Name != "Firefox" {
+		t.Fatalf("agent = %q, want Firefox", r.Agent.Name)
 	}
 }
 
