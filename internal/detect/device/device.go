@@ -70,6 +70,26 @@ func (d *Detector) classify(state *detect.State, lower string) string {
 		return "Tablet"
 	case strings.Contains(lower, "ipod"):
 		return "Mobile"
+	case hasAny(lower, "smart-tv", "smarttv", "hbbtv",
+		"bravia", "appletv", "googletv"):
+		return "TV"
+	case hasAny(lower, "chromecast", "crkey", "roku"):
+		return "Set-top box"
+	case containsToken(lower, "aft"):
+		return "Set-top box"
+	case hasAny(lower, "playstation", "xbox", "nintendo"):
+		if hasAny(lower, "3ds", "new nintendo 3ds") {
+			return "Handheld Game Console"
+		}
+		return "Game Console"
+	case containsToken(lower, "watch"):
+		return "Watch"
+	case strings.Contains(lower, "tesla"):
+		return "Car"
+	case hasAny(lower, "oculus", "quest"):
+		return "Virtual Reality"
+	case strings.Contains(lower, "glass"):
+		return "Augmented Reality"
 	case hasAll(lower, "android", "mobile"):
 		return "Phone"
 	case strings.Contains(lower, "android"):
@@ -80,24 +100,6 @@ func (d *Detector) classify(state *detect.State, lower string) string {
 		return "Mobile"
 	case hasAny(lower, "tablet", "kindle"):
 		return "Tablet"
-	case hasAny(lower, "smart-tv", "smarttv", "hbbtv",
-		"bravia", "appletv", "googletv"):
-		return "TV"
-	case hasAny(lower, "chromecast", "crkey", "roku", "aft"):
-		return "Set-top box"
-	case hasAny(lower, "playstation", "xbox", "nintendo"):
-		if hasAny(lower, "3ds", "new nintendo 3ds") {
-			return "Handheld Game Console"
-		}
-		return "Game Console"
-	case strings.Contains(lower, "watch"):
-		return "Watch"
-	case strings.Contains(lower, "tesla"):
-		return "Car"
-	case hasAny(lower, "oculus", "quest"):
-		return "Virtual Reality"
-	case strings.Contains(lower, "glass"):
-		return "Augmented Reality"
 	case hasAny(lower, "macintosh", "windows nt", "x11",
 		"cros ", "linux"):
 		return "Desktop"
@@ -128,6 +130,33 @@ func hasAny(s string, parts ...string) bool {
 	return false
 }
 
+// containsToken reports whether key appears at the start of an
+// alphanumeric token in s (ASCII letter/digit runs).
+// "aft" matches "aftmm" and "; aft ", not "draftphone".
+func containsToken(s, key string) bool {
+	if key == "" || len(key) > len(s) {
+		return false
+	}
+	key = strings.ToLower(key)
+	s = strings.ToLower(s)
+	for i := 0; i+len(key) <= len(s); i++ {
+		if s[i:i+len(key)] != key {
+			continue
+		}
+		if i > 0 && isASCIIAlnum(s[i-1]) {
+			continue
+		}
+		return true
+	}
+	return false
+}
+
+func isASCIIAlnum(b byte) bool {
+	return (b >= 'a' && b <= 'z') ||
+		(b >= 'A' && b <= 'Z') ||
+		(b >= '0' && b <= '9')
+}
+
 func (d *Detector) applyBrand(state *detect.State, lower string) {
 	for _, b := range d.brands {
 		key := b.Prefix
@@ -137,7 +166,7 @@ func (d *Detector) applyBrand(state *detect.State, lower string) {
 		if key == "" {
 			continue
 		}
-		if !strings.Contains(lower, strings.ToLower(key)) {
+		if !containsToken(lower, key) {
 			continue
 		}
 		if state.DeviceBrand == "" && b.Brand != "" {
