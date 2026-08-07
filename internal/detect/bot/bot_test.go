@@ -135,3 +135,146 @@ func TestDetectGooglebotLeavesSecurityEmpty(t *testing.T) {
 		t.Fatalf("security = %q, want empty for Robot", state.AgentSecurity)
 	}
 }
+
+func TestDetectSogouBrowserNotBot(t *testing.T) {
+	ua := "Mozilla/5.0 (Linux; Android 13; Pixel 7) " +
+		"AppleWebKit/537.36 (KHTML, like Gecko) " +
+		"Version/4.0 Chrome/120.0.0.0 Mobile Safari/537.36 " +
+		"SogouMobileBrowser/6.0"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if state.BotMatched {
+		t.Fatalf("BotMatched = true, want false; agent=%#v", state)
+	}
+}
+
+func TestDetectFlipboardAppNotBot(t *testing.T) {
+	ua := "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) " +
+		"AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 " +
+		"Flipboard/4.2.0"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if state.BotMatched {
+		t.Fatalf("BotMatched = true, want false; agent=%#v", state)
+	}
+}
+
+func TestDetectFlipboardProxyIsBot(t *testing.T) {
+	ua := "Mozilla/5.0 (compatible; FlipboardProxy/1.0; " +
+		"+http://flipboard.com/browserproxy)"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if !state.BotMatched {
+		t.Fatal("BotMatched = false, want true")
+	}
+	if state.AgentName != "FlipboardProxy" {
+		t.Fatalf("agent = %q, want FlipboardProxy", state.AgentName)
+	}
+}
+
+func TestDetectWordPressPingbackIsBot(t *testing.T) {
+	ua := "WordPress/6.4; https://example.com"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if !state.BotMatched {
+		t.Fatal("BotMatched = false, want true")
+	}
+	if state.AgentName != "WordPress" {
+		t.Fatalf("agent = %q, want WordPress", state.AgentName)
+	}
+}
+
+func TestDetectWordPressAppNotBot(t *testing.T) {
+	ua := "wp-android/22.0 (wordpress for android)"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if state.BotMatched {
+		t.Fatalf("BotMatched = true, want false; agent=%#v", state)
+	}
+}
+
+func TestDetectUptimeRobotIsBot(t *testing.T) {
+	ua := "Mozilla/5.0+(compatible; UptimeRobot/2.0; " +
+		"http://www.uptimerobot.com/)"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if !state.BotMatched {
+		t.Fatal("BotMatched = false, want true")
+	}
+	if state.AgentName != "Uptime Monitor" {
+		t.Fatalf("agent = %q, want Uptime Monitor", state.AgentName)
+	}
+}
+
+func TestDetectUnrelatedUptimeNotBot(t *testing.T) {
+	ua := "MyUptimeDashboard/1.0"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if state.BotMatched {
+		t.Fatalf("BotMatched = true, want false; agent=%#v", state)
+	}
+}
+
+func TestDetectBrowserMastodonNotBot(t *testing.T) {
+	ua := "Mozilla/5.0 (Linux; Android 13; Pixel 7) " +
+		"AppleWebKit/537.36 (KHTML, like Gecko) " +
+		"Chrome/120.0.0.0 Mobile Safari/537.36 Mastodon/4.0"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if state.BotMatched {
+		t.Fatalf("BotMatched = true, want false; agent=%#v", state)
+	}
+}
+
+func TestDetectBareMastodonIsBot(t *testing.T) {
+	ua := "http.rb/5.1.0 (Mastodon/4.0; +https://example.social/)"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if !state.BotMatched {
+		t.Fatal("BotMatched = false, want true")
+	}
+	if state.AgentName != "Mastodon" {
+		t.Fatalf("agent = %q, want Mastodon", state.AgentName)
+	}
+}
+
+func TestDetectBrowserTumblrNotBot(t *testing.T) {
+	ua := "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) " +
+		"AppleWebKit/605.1.15 (KHTML, like Gecko) " +
+		"Version/16.0 Mobile/15E148 Safari/604.1 Tumblr/20.0"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if state.BotMatched {
+		t.Fatalf("BotMatched = true, want false; agent=%#v", state)
+	}
+}

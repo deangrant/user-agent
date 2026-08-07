@@ -17,7 +17,6 @@ type BotPattern struct {
 	DeviceClass string `json:"deviceClass"`
 	AgentClass  string `json:"agentClass"`
 	Heuristic   bool   `json:"heuristic"`
-	Mobile      *bool  `json:"mobile"`
 }
 
 // AppPattern matches in-app browsers and applications.
