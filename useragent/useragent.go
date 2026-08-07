@@ -20,26 +20,11 @@ type Analyzer struct {
 	detectors []detect.Detector
 }
 
-// Option configures an Analyzer.
-type Option func(*Analyzer)
-
-// WithDetectors replaces the default detector pipeline.
-// Intended for tests and advanced customization.
-func WithDetectors(d ...detect.Detector) Option {
-	return func(a *Analyzer) {
-		a.detectors = append([]detect.Detector(nil), d...)
-	}
-}
-
 // NewAnalyzer returns an Analyzer with the default detector pipeline.
-func NewAnalyzer(opts ...Option) *Analyzer {
-	a := &Analyzer{
+func NewAnalyzer() *Analyzer {
+	return &Analyzer{
 		detectors: defaultDetectors(),
 	}
-	for _, opt := range opts {
-		opt(a)
-	}
-	return a
 }
 
 func defaultDetectors() []detect.Detector {
