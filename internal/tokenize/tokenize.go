@@ -34,38 +34,79 @@ func Parse(ua string) Tokens {
 			break
 		}
 		if ua[i] == '(' {
-			end := strings.IndexByte(ua[i:], ')')
-			if end < 0 {
-				comment := strings.TrimSpace(ua[i+1:])
+			closeIdx, ok := findMatchingParen(ua, i)
+			if !ok {
+				rest := ua[i+1:]
+				comment := strings.TrimSpace(rest)
 				if comment != "" {
 					t.Comments = append(t.Comments, splitComment(comment)...)
 				}
+				appendProducts(&t, rest)
 				break
 			}
-			comment := strings.TrimSpace(ua[i+1 : i+end])
+			comment := strings.TrimSpace(ua[i+1 : closeIdx])
 			if comment != "" {
 				t.Comments = append(t.Comments, splitComment(comment)...)
 			}
-			i += end + 1
+			i = closeIdx + 1
 			continue
 		}
 		start := i
 		for i < len(ua) && !isSep(ua[i]) && ua[i] != '(' {
 			i++
 		}
-		token := ua[start:i]
-		if token == "" {
-			continue
-		}
-		name, version := splitProduct(token)
-		if name != "" {
-			t.Products = append(t.Products, Product{
-				Name:    name,
-				Version: version,
-			})
-		}
+		appendProductToken(&t, ua[start:i])
 	}
 	return t
+}
+
+// findMatchingParen returns the index of the ')' that closes ua[open]
+// using depth counting. ok is false when the parenthesis is unclosed.
+func findMatchingParen(ua string, open int) (closeIdx int, ok bool) {
+	depth := 1
+	for j := open + 1; j < len(ua); j++ {
+		switch ua[j] {
+		case '(':
+			depth++
+		case ')':
+			depth--
+			if depth == 0 {
+				return j, true
+			}
+		}
+	}
+	return 0, false
+}
+
+func appendProducts(t *Tokens, s string) {
+	i := 0
+	for i < len(s) {
+		for i < len(s) && isSep(s[i]) {
+			i++
+		}
+		if i >= len(s) {
+			break
+		}
+		if s[i] == '(' {
+			i++
+			continue
+		}
+		start := i
+		for i < len(s) && !isSep(s[i]) && s[i] != '(' {
+			i++
+		}
+		appendProductToken(t, s[start:i])
+	}
+}
+
+func appendProductToken(t *Tokens, token string) {
+	name, version := splitProduct(token)
+	if name != "" {
+		t.Products = append(t.Products, Product{
+			Name:    name,
+			Version: version,
+		})
+	}
 }
 
 // FindProduct returns the first product with the given name
@@ -112,6 +153,9 @@ func splitComment(comment string) []string {
 	parts := strings.Split(comment, ";")
 	out := make([]string, 0, len(parts))
 	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		p = strings.TrimLeft(p, "(")
+		p = strings.TrimRight(p, ")")
 		p = strings.TrimSpace(p)
 		if p != "" {
 			out = append(out, p)

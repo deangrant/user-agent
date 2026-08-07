@@ -315,4 +315,16 @@ func TestParseEmpty(t *testing.T) {
 	}
 }
 
+func TestParseNestedParensNoGarbageDeviceName(t *testing.T) {
+	ua := "Mozilla/5.0 ((Linux; Android 13; Pixel 7) AppleWebKit/537.36 " +
+		"(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+	r := useragent.Parse(ua)
+	if r.Device.Name == "(Linux" {
+		t.Fatalf("device name = %q", r.Device.Name)
+	}
+	if r.Agent.Name != "Chrome" {
+		t.Fatalf("agent = %q, want Chrome", r.Agent.Name)
+	}
+}
+
 func boolPtr(v bool) *bool { return &v }
