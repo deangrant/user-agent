@@ -104,7 +104,11 @@ go install ./cmd/useragent
 useragent parse 'Mozilla/5.0 ...'
 ```
 
-Pretty JSON is printed by default. Use `-compact` for one line.
+Pretty field lines are printed by default
+(`[+] Device.Class: ...`), with a green `[+]` and key when stdout is a
+terminal. Empty and `Unknown` values are omitted. Use `-json` for indented
+JSON, or `-compact` for one-line JSON. Set `NO_COLOR` to disable ANSI
+colors.
 
 With Client Hints flags:
 

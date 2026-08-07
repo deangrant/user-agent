@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/textproto"
+	"os"
 	"strings"
 
 	"github.com/deangrant/user-agent/useragent"
@@ -16,6 +17,7 @@ import (
 
 // parseFlags holds CLI options for the parse subcommand.
 type parseFlags struct {
+	json    bool
 	compact bool
 
 	secCHUA                string
@@ -34,6 +36,7 @@ func runParse(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 	fs.SetOutput(stderr)
 
 	var f parseFlags
+	fs.BoolVar(&f.json, "json", false, "emit indented JSON")
 	fs.BoolVar(&f.compact, "compact", false, "emit compact JSON")
 	fs.StringVar(&f.secCHUA, "sec-ch-ua", "", "Sec-CH-UA value")
 	fs.StringVar(&f.secCHUAFullVersionList, "sec-ch-ua-full-version-list", "",
@@ -90,7 +93,7 @@ func runParse(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 		applyHintFlags(h, f)
 		result = useragent.ParseHeaders(h)
 	}
-	return writeResult(stdout, result, f.compact)
+	return writeResult(stdout, result, f.json, f.compact)
 }
 
 func applyHintFlags(h http.Header, f parseFlags) {
@@ -130,7 +133,22 @@ func headersFromReader(r io.Reader) (http.Header, error) {
 	return h, nil
 }
 
-func writeResult(w io.Writer, result useragent.Result, compact bool) error {
+func writeResult(
+	w io.Writer,
+	result useragent.Result,
+	asJSON, compact bool,
+) error {
+	if asJSON || compact {
+		return writeResultJSON(w, result, compact)
+	}
+	return writeResultLines(w, result)
+}
+
+func writeResultJSON(
+	w io.Writer,
+	result useragent.Result,
+	compact bool,
+) error {
 	enc := json.NewEncoder(w)
 	if !compact {
 		enc.SetIndent("", "  ")
@@ -139,6 +157,85 @@ func writeResult(w io.Writer, result useragent.Result, compact bool) error {
 		return fmt.Errorf("encode json: %w", err)
 	}
 	return nil
+}
+
+func writeResultLines(w io.Writer, result useragent.Result) error {
+	lines := []struct {
+		path  string
+		value string
+	}{
+		{"UserAgent", result.UserAgent},
+		{"Device.Class", string(result.Device.Class)},
+		{"Device.Name", result.Device.Name},
+		{"Device.Brand", result.Device.Brand},
+		{"Device.CPU", result.Device.CPU},
+		{"OperatingSystem.Class", string(result.OperatingSystem.Class)},
+		{"OperatingSystem.Name", result.OperatingSystem.Name},
+		{"OperatingSystem.Version", result.OperatingSystem.Version},
+		{"OperatingSystem.VersionBuild", result.OperatingSystem.VersionBuild},
+		{"OperatingSystem.NameVersion", result.OperatingSystem.NameVersion},
+		{"LayoutEngine.Class", string(result.LayoutEngine.Class)},
+		{"LayoutEngine.Name", result.LayoutEngine.Name},
+		{"LayoutEngine.Version", result.LayoutEngine.Version},
+		{"LayoutEngine.VersionMajor", result.LayoutEngine.VersionMajor},
+		{"LayoutEngine.NameVersion", result.LayoutEngine.NameVersion},
+		{"LayoutEngine.NameVersionMajor", result.LayoutEngine.NameVersionMajor},
+		{"Agent.Class", string(result.Agent.Class)},
+		{"Agent.Name", result.Agent.Name},
+		{"Agent.Version", result.Agent.Version},
+		{"Agent.VersionMajor", result.Agent.VersionMajor},
+		{"Agent.NameVersion", result.Agent.NameVersion},
+		{"Agent.NameVersionMajor", result.Agent.NameVersionMajor},
+		{"AgentSecurity", string(result.AgentSecurity)},
+	}
+	color := useColor(w)
+	for _, line := range lines {
+		if skipFieldValue(line.value) {
+			continue
+		}
+		if err := writeFieldLine(w, line.path, line.value, color); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func skipFieldValue(value string) bool {
+	v := strings.TrimSpace(value)
+	return v == "" || strings.EqualFold(v, "Unknown")
+}
+
+const (
+	ansiGreen = "\033[32m"
+	ansiReset = "\033[0m"
+)
+
+func writeFieldLine(w io.Writer, path, value string, color bool) error {
+	if color {
+		_, err := fmt.Fprintf(w, "%s[+]%s %s%s%s: %s\n",
+			ansiGreen, ansiReset,
+			ansiGreen, path, ansiReset,
+			value)
+		return err
+	}
+	_, err := fmt.Fprintf(w, "[+] %s: %s\n", path, value)
+	return err
+}
+
+// useColor reports whether ANSI colors should be written to w.
+func useColor(w io.Writer) bool {
+	if os.Getenv("NO_COLOR") != "" {
+		return false
+	}
+	f, ok := w.(*os.File)
+	if !ok {
+		return false
+	}
+	info, err := f.Stat()
+	if err != nil {
+		return false
+	}
+	return info.Mode()&os.ModeCharDevice != 0
 }
 
 // normalizeHeaderBlock ensures a trailing blank line so ReadMIMEHeader

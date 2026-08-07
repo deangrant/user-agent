@@ -67,7 +67,50 @@ func TestNormalizeHeaderBlock(t *testing.T) {
 	}
 }
 
-func TestWriteResult(t *testing.T) {
+func TestWriteResultLines(t *testing.T) {
+	r := useragent.Result{
+		UserAgent: "ua",
+		Device: useragent.Device{
+			Class: useragent.DeviceClassDesktop,
+		},
+		Agent: useragent.Agent{
+			Class: useragent.AgentClassBrowser,
+			Name:  "Chrome",
+		},
+		AgentSecurity: useragent.AgentSecurityUnknown,
+	}
+	var buf bytes.Buffer
+	if err := writeResult(&buf, r, false, false); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{
+		"[+] UserAgent: ua\n",
+		"[+] Device.Class: Desktop\n",
+		"[+] Agent.Name: Chrome\n",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("missing %q in:\n%s", want, out)
+		}
+	}
+	for _, skip := range []string{
+		"AgentSecurity:",
+		"Device.Name:",
+		"Unknown",
+	} {
+		if strings.Contains(out, skip) {
+			t.Fatalf("unexpected %q in:\n%s", skip, out)
+		}
+	}
+	if strings.Contains(out, "{") {
+		t.Fatalf("unexpected JSON: %s", out)
+	}
+	if strings.Contains(out, "\033[") {
+		t.Fatalf("unexpected ANSI color in buffer output: %q", out)
+	}
+}
+
+func TestWriteResultJSON(t *testing.T) {
 	r := useragent.Result{
 		UserAgent: "ua",
 		Agent: useragent.Agent{
@@ -76,17 +119,16 @@ func TestWriteResult(t *testing.T) {
 		},
 	}
 	var pretty, compact bytes.Buffer
-	if err := writeResult(&pretty, r, false); err != nil {
+	if err := writeResult(&pretty, r, true, false); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeResult(&compact, r, true); err != nil {
+	if err := writeResult(&compact, r, false, true); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(pretty.String(), "\n") {
 		t.Fatalf("pretty missing newlines: %q", pretty.String())
 	}
 	if strings.Count(compact.String(), "\n") != 1 {
-		// Encode adds a trailing newline.
 		t.Fatalf("compact = %q", compact.String())
 	}
 	var decoded useragent.Result
@@ -103,20 +145,20 @@ func TestRunParseUA(t *testing.T) {
 		"AppleWebKit/537.36 (KHTML, like Gecko) " +
 		"Chrome/120.0.0.0 Safari/537.36"
 	var stdout, stderr bytes.Buffer
-	err := run([]string{"parse", "-compact", ua},
+	err := run([]string{"parse", ua},
 		strings.NewReader(""), &stdout, &stderr)
 	if err != nil {
 		t.Fatalf("run: %v (stderr=%s)", err, stderr.String())
 	}
-	var got useragent.Result
-	if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
-		t.Fatalf("json: %v body=%s", err, stdout.String())
+	out := stdout.String()
+	if !strings.Contains(out, "[+] Agent.Name: Chrome\n") {
+		t.Fatalf("missing Agent.Name in:\n%s", out)
 	}
-	if got.Agent.Name != "Chrome" {
-		t.Fatalf("agent = %q", got.Agent.Name)
+	if !strings.Contains(out, "[+] OperatingSystem.Name: Windows\n") {
+		t.Fatalf("missing OS.Name in:\n%s", out)
 	}
-	if got.OperatingSystem.Name != "Windows" {
-		t.Fatalf("os = %q", got.OperatingSystem.Name)
+	if !strings.Contains(out, "[+] Device.Class: Desktop\n") {
+		t.Fatalf("missing Device.Class in:\n%s", out)
 	}
 }
 
@@ -129,20 +171,17 @@ func TestRunParseStdinHeaders(t *testing.T) {
 		"Sec-CH-UA-Model: \"Pixel 7\"\n" +
 		"Sec-CH-UA-Mobile: ?1\n"
 	var stdout, stderr bytes.Buffer
-	err := run([]string{"parse", "-compact", "-"},
+	err := run([]string{"parse", "-"},
 		strings.NewReader(input), &stdout, &stderr)
 	if err != nil {
 		t.Fatalf("run: %v (stderr=%s)", err, stderr.String())
 	}
-	var got useragent.Result
-	if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
-		t.Fatal(err)
+	out := stdout.String()
+	if !strings.Contains(out, "[+] Device.Name: Pixel 7\n") {
+		t.Fatalf("missing Device.Name in:\n%s", out)
 	}
-	if got.Device.Name != "Pixel 7" {
-		t.Fatalf("device = %#v", got.Device)
-	}
-	if got.OperatingSystem.Name != "Android" {
-		t.Fatalf("os = %#v", got.OperatingSystem)
+	if !strings.Contains(out, "[+] OperatingSystem.Name: Android\n") {
+		t.Fatalf("missing OS.Name in:\n%s", out)
 	}
 }
 
@@ -151,7 +190,7 @@ func TestRunParseWithHintFlags(t *testing.T) {
 		"AppleWebKit/537.36 (KHTML, like Gecko) " +
 		"Chrome/100.0.0.0 Safari/537.36"
 	args := []string{
-		"parse", "-compact",
+		"parse",
 		"-sec-ch-ua-platform", `"Windows"`,
 		"-sec-ch-ua-platform-version", `"0.1.0"`,
 		"-sec-ch-ua-full-version-list",
@@ -163,15 +202,31 @@ func TestRunParseWithHintFlags(t *testing.T) {
 	if err != nil {
 		t.Fatalf("run: %v (stderr=%s)", err, stderr.String())
 	}
+	out := stdout.String()
+	if !strings.Contains(out, "[+] OperatingSystem.Version: 7\n") {
+		t.Fatalf("want Windows 7 in:\n%s", out)
+	}
+	if !strings.Contains(out, "[+] Agent.Version: 100.0.4896.75\n") {
+		t.Fatalf("want agent version in:\n%s", out)
+	}
+}
+
+func TestRunParseJSONFlag(t *testing.T) {
+	ua := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+		"AppleWebKit/537.36 (KHTML, like Gecko) " +
+		"Chrome/120.0.0.0 Safari/537.36"
+	var stdout, stderr bytes.Buffer
+	err := run([]string{"parse", "-compact", ua},
+		strings.NewReader(""), &stdout, &stderr)
+	if err != nil {
+		t.Fatalf("run: %v (stderr=%s)", err, stderr.String())
+	}
 	var got useragent.Result
 	if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
-		t.Fatal(err)
+		t.Fatalf("json: %v body=%s", err, stdout.String())
 	}
-	if got.OperatingSystem.Version != "7" {
-		t.Fatalf("windows version = %q, want 7", got.OperatingSystem.Version)
-	}
-	if got.Agent.Version != "100.0.4896.75" {
-		t.Fatalf("agent version = %q", got.Agent.Version)
+	if got.Agent.Name != "Chrome" {
+		t.Fatalf("agent = %q", got.Agent.Name)
 	}
 }
 
