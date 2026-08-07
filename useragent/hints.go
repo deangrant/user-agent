@@ -9,7 +9,9 @@ import (
 
 // BrandVersion is a brand and version pair from Client Hints.
 type BrandVersion struct {
-	Brand   string
+	// Brand is the brand name (e.g. Google Chrome).
+	Brand string
+	// Version is the brand version string.
 	Version string
 }
 

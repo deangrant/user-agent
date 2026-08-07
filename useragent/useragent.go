@@ -10,7 +10,7 @@ import (
 	detectbot "github.com/deangrant/user-agent/internal/detect/bot"
 	detectdevice "github.com/deangrant/user-agent/internal/detect/device"
 	detectengine "github.com/deangrant/user-agent/internal/detect/engine"
-	detectos "github.com/deangrant/user-agent/internal/detect/os"
+	"github.com/deangrant/user-agent/internal/detect/opsys"
 	"github.com/deangrant/user-agent/internal/merge"
 	"github.com/deangrant/user-agent/internal/tokenize"
 )
@@ -27,13 +27,18 @@ func NewAnalyzer() *Analyzer {
 	}
 }
 
+// defaultDetectors builds the analysis pipeline. Order is significant:
+// bot before app (bots win); agent before engine (Blink uses AgentName);
+// opsys before device (device uses OS fields). Detectors fill empty
+// fields unless they own the concern; merge.Apply then overlays Client
+// Hints and finalizes derived strings.
 func defaultDetectors() []detect.Detector {
 	return []detect.Detector{
 		detectbot.New(),
 		detectapp.New(),
 		detectagent.New(),
 		detectengine.New(),
-		detectos.New(),
+		opsys.New(),
 		detectdevice.New(),
 	}
 }
@@ -44,6 +49,7 @@ func (a *Analyzer) Parse(ua string) Result {
 }
 
 // ParseWithHints analyzes a User-Agent string with Client Hints.
+// A nil Analyzer receiver is treated as NewAnalyzer().
 func (a *Analyzer) ParseWithHints(ua string, hints ClientHints) Result {
 	if a == nil {
 		a = NewAnalyzer()

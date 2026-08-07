@@ -10,7 +10,8 @@ import (
 )
 
 // ResolveWindows maps Sec-CH-UA-Platform-Version to a Windows version.
-// Docs: learn.microsoft.com/.../how-to-detect-win11
+// See Microsoft Edge docs on detecting Windows 11 via Client Hints:
+// https://learn.microsoft.com/microsoft-edge/web-platform/how-to-detect-win11
 func ResolveWindows(platformVersion string) (name, ver string) {
 	platformVersion = strings.TrimSpace(platformVersion)
 	if platformVersion == "" {
@@ -73,7 +74,7 @@ func ResolveFromCH(platform, platformVersion string) (name, ver, class string) {
 	case "windows":
 		name, ver = ResolveWindows(platformVersion)
 		return name, ver, uaclass.Desktop
-	case "macos", "mac os x", "macOS":
+	case "macos", "mac os x":
 		name, ver = ResolveMacOS(platformVersion)
 		return name, ver, uaclass.Desktop
 	case "android":

@@ -1,5 +1,5 @@
-// Package os detects operating systems from User-Agent tokens.
-package os
+// Package opsys detects operating systems from User-Agent tokens.
+package opsys
 
 import (
 	"strings"

@@ -1,4 +1,10 @@
 // Package detect defines the analysis state and Detector contract.
+//
+// The default pipeline (wired in package useragent) runs detectors in
+// order: bot, app, agent, engine, opsys, device, then merge.Apply.
+// Engine may read AgentName; device may read OS fields. Detectors
+// should fill empty fields unless they own the concern; Client Hints
+// merge may overwrite UA-derived values.
 package detect
 
 import (

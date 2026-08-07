@@ -98,49 +98,78 @@ const (
 // Result holds analyzed fields extracted from a User-Agent and
 // optional Client Hints.
 type Result struct {
-	UserAgent           string
-	Device              Device
-	OperatingSystem     OperatingSystem
-	LayoutEngine        LayoutEngine
-	Agent               Agent
-	AgentSecurity       AgentSecurity
+	// UserAgent is the input User-Agent string.
+	UserAgent string
+	// Device describes the client hardware.
+	Device Device
+	// OperatingSystem describes the client OS.
+	OperatingSystem OperatingSystem
+	// LayoutEngine describes the rendering engine when detectable.
+	LayoutEngine LayoutEngine
+	// Agent describes the browser or application.
+	Agent Agent
+	// AgentSecurity is the indicated transport security class.
+	AgentSecurity AgentSecurity
+	// ClientHintsMismatch is true when Client Hints conflict with the
+	// UA-derived OS family and the UA OS was kept.
 	ClientHintsMismatch bool
 }
 
 // Device describes the client hardware.
 type Device struct {
+	// Class is the device category (phone, desktop, robot, …).
 	Class DeviceClass
-	Name  string
+	// Name is the model or product name when known.
+	Name string
+	// Brand is the manufacturer when known.
 	Brand string
-	CPU   string
+	// CPU is the architecture hint when known (e.g. ARM, x64).
+	CPU string
 }
 
 // OperatingSystem describes the client OS.
 type OperatingSystem struct {
-	Class        OSClass
-	Name         string
-	Version      string
+	// Class is the OS category (desktop, mobile, …).
+	Class OSClass
+	// Name is the OS product name (e.g. Windows, Android).
+	Name string
+	// Version is the OS version string.
+	Version string
+	// VersionBuild is a build identifier when present (e.g. Android).
 	VersionBuild string
-	NameVersion  string
+	// NameVersion joins Name and Version when both exist.
+	NameVersion string
 }
 
 // LayoutEngine describes the rendering engine.
 type LayoutEngine struct {
-	Class            EngineClass
-	Name             string
-	Version          string
-	VersionMajor     string
-	NameVersion      string
+	// Class is the engine category (browser, robot, mobile app, …).
+	Class EngineClass
+	// Name is the engine product (Blink, WebKit, Gecko, …).
+	Name string
+	// Version is the full engine version when known.
+	Version string
+	// VersionMajor is the major version component of Version.
+	VersionMajor string
+	// NameVersion joins Name and Version when both exist.
+	NameVersion string
+	// NameVersionMajor joins Name and VersionMajor when both exist.
 	NameVersionMajor string
 }
 
 // Agent describes the browser or application.
 type Agent struct {
-	Class            AgentClass
-	Name             string
-	Version          string
-	VersionMajor     string
-	NameVersion      string
+	// Class is the agent category (browser, robot, mobile app, …).
+	Class AgentClass
+	// Name is the agent product name.
+	Name string
+	// Version is the full agent version when known.
+	Version string
+	// VersionMajor is the major version component of Version.
+	VersionMajor string
+	// NameVersion joins Name and Version when both exist.
+	NameVersion string
+	// NameVersionMajor joins Name and VersionMajor when both exist.
 	NameVersionMajor string
 }
 

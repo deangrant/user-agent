@@ -230,7 +230,7 @@ func TestParseGooglebot(t *testing.T) {
 		"+http://www.google.com/bot.html)"
 	r := useragent.Parse(ua)
 	if !r.IsBot() {
-		t.Fatalf("expected bot, got %#v", r)
+		t.Fatalf("IsBot() = false, want true; result=%#v", r)
 	}
 	if r.Agent.Name != "Googlebot" {
 		t.Fatalf("agent = %q", r.Agent.Name)

@@ -1,0 +1,26 @@
+---
+description: Enforce Google Go style and SOLID Go design for this repo
+globs: "**/*.go"
+alwaysApply: false
+---
+
+# Go style and SOLID (user-agent)
+
+When editing Go in this repository:
+
+1. Read and apply `.agents/skills/google-go-style-guide/SKILL.md` (and guide/style-decisions as needed).
+2. Read and apply `.agents/skills/solid-go-design/SKILL.md`.
+
+## Local norms
+
+- Format with `gofmt`; keep lines within golines max-len 80 (see `.golangci.yml`).
+- Use stdlib `testing` only; failure messages put **got before want**.
+- Prefer MixedCaps; avoid package names that collide with the standard library.
+- Do not add speculative interfaces. Keep `detect.Detector` as a single method.
+- Wire the detector pipeline only in `useragent` (composition root); do not create
+  `detect` → subpackage → `detect` import cycles.
+- Detectors fill empty fields unless they own the concern; Client Hints merge may
+  overwrite. Preserve documented order: bot → app → agent → engine → opsys →
+  device → merge.
+- Avoid new package-level mutable client state; prefer `Analyzer` at call sites
+  when customization or tests need isolation.
