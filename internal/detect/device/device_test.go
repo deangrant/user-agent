@@ -73,3 +73,56 @@ func TestFireTVAFTMM(t *testing.T) {
 		t.Fatalf("class = %q, want Set-top box", state.DeviceClass)
 	}
 }
+
+func TestPixelWithoutMobileIsPhone(t *testing.T) {
+	ua := "Mozilla/5.0 (Linux; Android 13; Pixel 7) " +
+		"AppleWebKit/537.36 (KHTML, like Gecko) " +
+		"Chrome/120.0.0.0 Safari/537.36"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+		OSName: "Android",
+	}
+	New().Detect(state)
+	if state.DeviceClass != "Phone" {
+		t.Fatalf("class = %q, want Phone", state.DeviceClass)
+	}
+	if state.DeviceBrand != "Google" {
+		t.Fatalf("brand = %q, want Google", state.DeviceBrand)
+	}
+	if state.DeviceName != "Pixel 7" {
+		t.Fatalf("name = %q, want Pixel 7", state.DeviceName)
+	}
+}
+
+func TestAndroidTabletTokenIsTablet(t *testing.T) {
+	ua := "Mozilla/5.0 (Linux; Android 12; Lenovo TB-X606F) " +
+		"AppleWebKit/537.36 (KHTML, like Gecko) " +
+		"Chrome/120.0.0.0 Safari/537.36"
+	// Explicit tablet token (and no Mobile) should classify as Tablet.
+	ua += " Tablet"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+		OSName: "Android",
+	}
+	New().Detect(state)
+	if state.DeviceClass != "Tablet" {
+		t.Fatalf("class = %q, want Tablet", state.DeviceClass)
+	}
+}
+
+func TestAndroidMobileIsPhone(t *testing.T) {
+	ua := "Mozilla/5.0 (Linux; Android 13; Pixel 7) " +
+		"AppleWebKit/537.36 (KHTML, like Gecko) " +
+		"Chrome/120.0.0.0 Mobile Safari/537.36"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+		OSName: "Android",
+	}
+	New().Detect(state)
+	if state.DeviceClass != "Phone" {
+		t.Fatalf("class = %q, want Phone", state.DeviceClass)
+	}
+}

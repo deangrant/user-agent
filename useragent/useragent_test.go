@@ -155,6 +155,20 @@ func TestParseWithClientHintsWindows11(t *testing.T) {
 	}
 }
 
+func TestParseWithHintsMobileOverridesTabletUA(t *testing.T) {
+	ua := "Mozilla/5.0 (Linux; Android 12; Lenovo TB-X606F) " +
+		"AppleWebKit/537.36 (KHTML, like Gecko) " +
+		"Chrome/120.0.0.0 Safari/537.36 Tablet"
+	mobile := true
+	r := useragent.ParseWithHints(ua, useragent.ClientHints{
+		Platform: "Android",
+		Mobile:   &mobile,
+	})
+	if r.Device.Class != useragent.DeviceClassPhone {
+		t.Fatalf("class = %q, want Phone", r.Device.Class)
+	}
+}
+
 func TestParseHeadersAndRequest(t *testing.T) {
 	h := http.Header{}
 	h.Set("User-Agent", "Mozilla/5.0 (Linux; Android 13; Pixel 7) "+

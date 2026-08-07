@@ -39,20 +39,9 @@ func (d *Detector) Detect(state *detect.State) {
 	// Refine phone vs tablet for Android.
 	if state.OSName == "Android" &&
 		(state.DeviceClass == "Mobile" || state.DeviceClass == "Phone" ||
-			state.DeviceClass == "Tablet" || state.DeviceClass == "Unknown" ||
-			state.DeviceClass == "") {
+			state.DeviceClass == "Unknown" || state.DeviceClass == "") {
 		if strings.Contains(lower, "mobile") {
-			if state.DeviceClass != "Tablet" {
-				state.DeviceClass = "Phone"
-			}
-		} else if !strings.Contains(lower, "mobile") &&
-			strings.Contains(lower, "android") &&
-			!strings.Contains(lower, "phone") {
-			// Android without Mobile often tablet.
-			if state.DeviceClass == "Phone" || state.DeviceClass == "Mobile" ||
-				state.DeviceClass == "Unknown" || state.DeviceClass == "" {
-				state.DeviceClass = "Tablet"
-			}
+			state.DeviceClass = "Phone"
 		}
 	}
 }
@@ -90,16 +79,16 @@ func (d *Detector) classify(state *detect.State, lower string) string {
 		return "Virtual Reality"
 	case strings.Contains(lower, "glass"):
 		return "Augmented Reality"
+	case hasAny(lower, "tablet", "kindle"):
+		return "Tablet"
 	case hasAll(lower, "android", "mobile"):
 		return "Phone"
 	case strings.Contains(lower, "android"):
-		return "Tablet"
+		return "Phone"
 	case strings.Contains(lower, "windows phone"):
 		return "Phone"
 	case strings.Contains(lower, "mobile"):
 		return "Mobile"
-	case hasAny(lower, "tablet", "kindle"):
-		return "Tablet"
 	case hasAny(lower, "macintosh", "windows nt", "x11",
 		"cros ", "linux"):
 		return "Desktop"
@@ -177,7 +166,8 @@ func (d *Detector) applyBrand(state *detect.State, lower string) {
 		}
 		if b.Class != "" &&
 			(state.DeviceClass == "" || state.DeviceClass == "Unknown" ||
-				state.DeviceClass == "Mobile") {
+				state.DeviceClass == "Mobile" ||
+				(b.Class == "Tablet" && state.DeviceClass == "Phone")) {
 			state.DeviceClass = b.Class
 		}
 		return

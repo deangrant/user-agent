@@ -134,7 +134,8 @@ func applyDeviceHints(state *detect.State) {
 		if *h.Mobile {
 			if state.DeviceClass == "" ||
 				state.DeviceClass == "Unknown" ||
-				state.DeviceClass == "Desktop" {
+				state.DeviceClass == "Desktop" ||
+				state.DeviceClass == "Tablet" {
 				state.DeviceClass = "Phone"
 			}
 		} else if state.DeviceClass == "" || state.DeviceClass == "Unknown" {
