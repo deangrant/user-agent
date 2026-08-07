@@ -1,0 +1,15 @@
+---
+description: Keep this module stdlib-only (no third-party Go dependencies)
+alwaysApply: true
+---
+
+# Stdlib-only (user-agent)
+
+This module must remain dependency-free beyond the Go standard library.
+
+- Do not add `require` entries to `go.mod` for third-party modules.
+- Do not introduce assertion libraries, HTTP frameworks, or UA parsers.
+- Tests use stdlib `testing` only; put **got before want** in failure messages.
+- Prefer shell/`go test`/`golangci-lint` for verification over new tooling deps.
+- If a change seems to need an external library, stop and ask; redesign with
+  stdlib instead.

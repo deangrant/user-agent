@@ -1,0 +1,27 @@
+---
+description: Client Hints parsing and merge ownership rules
+globs: "internal/hintparse/**,internal/merge/**,useragent/hints.go,useragent/useragent.go"
+alwaysApply: false
+---
+
+# Client Hints merge (user-agent)
+
+When editing Client Hints parsing or merge:
+
+1. Read and apply `.agents/skills/client-hints/SKILL.md`.
+2. Remember pipeline detectors run first; `merge.Apply` overlays CH last.
+
+## Local norms
+
+- Header parsing lives in `internal/hintparse` (RFC 8941 structured-field
+  **subset** only—do not pull a full SF library).
+- Public types and header extraction live in `useragent` (`ClientHints`,
+  `ClientHintsFromHeader` / `FromMap`).
+- Prefer Full-Version-List over Sec-CH-UA brands; use SignificantBrand for the
+  meaningful brand (skip GREASE / “Not A;Brand”).
+- On OS family conflict (e.g. Android UA + Windows CH), set
+  `ClientHintsMismatch` and keep UA-derived OS fields.
+- Frozen Chromium UA versions (`X.0.0.0`) should yield to richer CH versions.
+- Preserve iPadOS when UA says iPadOS and CH says broader iOS.
+- CLI hint flags must match wire values (often quoted); reproduce with
+  `/parse-ua`.

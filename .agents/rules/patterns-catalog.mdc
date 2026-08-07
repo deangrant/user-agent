@@ -1,0 +1,24 @@
+---
+description: Pattern catalog authoring rules for bots, apps, and brands
+globs: "internal/data/patterns.json,internal/detect/bot/**,internal/detect/app/**,internal/detect/device/**"
+alwaysApply: false
+---
+
+# Patterns catalog (user-agent)
+
+When editing `internal/data/patterns.json` or bot/app/device detectors:
+
+1. Read and apply `.agents/skills/patterns-catalog/SKILL.md`.
+2. Prefer `/add-pattern` for the full checklist.
+
+## Local norms
+
+- Every new or changed pattern needs a table-driven test in the owning package.
+- Keep patterns specific; avoid substrings that match normal browser UAs
+  (e.g. bare `bot` without `heuristic` + `looksLikeBot`).
+- Bot matching is case-insensitive `strings.Contains` on the UA; first
+  non-heuristic hit wins. Heuristic hits apply only when `looksLikeBot` agrees.
+- App patterns with `.*` compile as `(?i)` regexps; others are substring needles.
+- Brand keys use token-boundary matching (`prefix` preferred over `pattern`).
+  More specific overlapping prefixes must appear before shorter ones.
+- Do not add third-party deps for matching; catalog is embedded JSON only.

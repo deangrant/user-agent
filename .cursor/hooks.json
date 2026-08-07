@@ -4,11 +4,17 @@
     "afterFileEdit": [
       {
         "command": "bash .agents/hooks/gofmt.sh"
+      },
+      {
+        "command": "bash .agents/hooks/golines.sh"
+      },
+      {
+        "command": "bash .agents/hooks/validate-patterns.sh"
       }
     ],
     "beforeShellExecution": [
       {
-        "command": "bash .agents/hooks/guard-live-scan.sh"
+        "command": "bash .agents/hooks/guard-stdlib-only.sh"
       }
     ]
   }
