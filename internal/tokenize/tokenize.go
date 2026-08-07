@@ -143,7 +143,7 @@ func peekDottedVersion(ua string, i int) (ver string, after int, ok bool) {
 }
 
 func isDottedVersion(s string) bool {
-	return IsDigitRun(s) && strings.Contains(s, ".")
+	return isDigitRun(s) && strings.Contains(s, ".")
 }
 
 // FindProduct returns the first product with the given name
@@ -155,24 +155,6 @@ func (t Tokens) FindProduct(name string) (Product, bool) {
 		}
 	}
 	return Product{}, false
-}
-
-// HasCommentFragment reports whether any comment contains substr
-// (case-insensitive).
-func (t Tokens) HasCommentFragment(substr string) bool {
-	lower := strings.ToLower(substr)
-	for _, c := range t.Comments {
-		if strings.Contains(strings.ToLower(c), lower) {
-			return true
-		}
-	}
-	return false
-}
-
-// CommentContains reports whether any comment equals value
-// (case-insensitive) or the joined comments contain it.
-func (t Tokens) CommentContains(substr string) bool {
-	return t.HasCommentFragment(substr)
 }
 
 func splitProduct(token string) (name, version string) {
@@ -205,13 +187,7 @@ func isSep(b byte) bool {
 	return b == ' ' || b == '\t' || b == '\n' || b == '\r'
 }
 
-// LowerContains is a small helper for detectors.
-func LowerContains(s, substr string) bool {
-	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
-}
-
-// IsDigitRun reports whether s is non-empty and all digits/dots.
-func IsDigitRun(s string) bool {
+func isDigitRun(s string) bool {
 	if s == "" {
 		return false
 	}

@@ -1,10 +1,21 @@
 package tokenize_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/deangrant/user-agent/internal/tokenize"
 )
+
+func commentsContain(comments []string, substr string) bool {
+	lower := strings.ToLower(substr)
+	for _, c := range comments {
+		if strings.Contains(strings.ToLower(c), lower) {
+			return true
+		}
+	}
+	return false
+}
 
 func TestParseProductsAndComments(t *testing.T) {
 	ua := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
@@ -16,7 +27,7 @@ func TestParseProductsAndComments(t *testing.T) {
 	if p, ok := tok.FindProduct("Chrome"); !ok || p.Version != "120.0.0.0" {
 		t.Fatalf("Chrome product = %v ok=%v", p, ok)
 	}
-	if !tok.HasCommentFragment("Windows NT 10.0") {
+	if !commentsContain(tok.Comments, "Windows NT 10.0") {
 		t.Fatalf("comments = %v, want Windows NT", tok.Comments)
 	}
 }
@@ -37,7 +48,7 @@ func TestParseNestedParens(t *testing.T) {
 			t.Fatalf("comments = %v, contains garbage %q", tok.Comments, c)
 		}
 	}
-	if !tok.HasCommentFragment("Linux") {
+	if !commentsContain(tok.Comments, "Linux") {
 		t.Fatalf("comments = %v, want Linux", tok.Comments)
 	}
 	if _, ok := tok.FindProduct("Chrome"); !ok {
@@ -55,10 +66,10 @@ func TestParseUnclosedParenKeepsProducts(t *testing.T) {
 	if _, ok := tok.FindProduct("Safari"); !ok {
 		t.Fatalf("products = %v, want Safari", tok.Products)
 	}
-	if !tok.HasCommentFragment("Linux") {
+	if !commentsContain(tok.Comments, "Linux") {
 		t.Fatalf("comments = %v, want Linux", tok.Comments)
 	}
-	if !tok.HasCommentFragment("Android") {
+	if !commentsContain(tok.Comments, "Android") {
 		t.Fatalf("comments = %v, want Android", tok.Comments)
 	}
 }

@@ -122,13 +122,6 @@ func detectBrowser(state *detect.State, webview bool) {
 		if !ok {
 			continue
 		}
-		if r.product == "Chrome" {
-			// Skip Chrome token when it is only present as compatible
-			// token for Safari-like UAs without Chromium family.
-			if isSafariNotChrome(state) {
-				continue
-			}
-		}
 		if r.product == "Version" {
 			if !hasSafari(state) {
 				continue
@@ -184,18 +177,6 @@ func detectBrowser(state *detect.State, webview bool) {
 func hasSafari(state *detect.State) bool {
 	_, ok := state.Tokens.FindProduct("Safari")
 	return ok
-}
-
-func isSafariNotChrome(state *detect.State) bool {
-	_, hasChrome := state.Tokens.FindProduct("Chrome")
-	_, hasCriOS := state.Tokens.FindProduct("CriOS")
-	_, hasSafari := state.Tokens.FindProduct("Safari")
-	_, hasVersion := state.Tokens.FindProduct("Version")
-	if hasCriOS {
-		return false
-	}
-	return hasSafari && hasVersion && hasChrome &&
-		!strings.Contains(strings.ToLower(state.UA), "chrome/")
 }
 
 func extractRV(ua string) string {

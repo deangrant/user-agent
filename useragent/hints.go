@@ -61,7 +61,7 @@ func ClientHintsFromHeader(h http.Header) ClientHints {
 	}
 	m := make(map[string]string, 12)
 	for _, name := range hintHeaderNames {
-		if v := headerGet(h, name); v != "" {
+		if v := h.Get(name); v != "" {
 			m[name] = v
 		}
 	}
@@ -149,8 +149,4 @@ var hintHeaderNames = []string{
 	"Sec-CH-UA-Platform",
 	"Sec-CH-UA-Platform-Version",
 	"Sec-CH-UA-WoW64",
-}
-
-func headerGet(h http.Header, name string) string {
-	return h.Get(name)
 }
