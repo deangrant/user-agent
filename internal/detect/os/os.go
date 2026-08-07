@@ -48,14 +48,16 @@ func (d *Detector) Detect(state *detect.State) {
 			build := trimToken(ua[i+6:])
 			state.OSVersionBuild = build
 		}
+	case strings.Contains(lower, "ipad") &&
+		(strings.Contains(lower, "cpu os ") ||
+			strings.Contains(lower, "os ")):
+		ver := iosVersion(lower, ua)
+		state.SetOS("Mobile", "iPadOS", ver)
 	case strings.Contains(lower, "cpu iphone os"),
 		strings.Contains(lower, "cpu os "),
 		strings.Contains(lower, "iphone os"):
 		ver := iosVersion(lower, ua)
 		state.SetOS("Mobile", "iOS", ver)
-	case strings.Contains(lower, "ipad") && strings.Contains(lower, "os "):
-		ver := iosVersion(lower, ua)
-		state.SetOS("Mobile", "iPadOS", ver)
 	case strings.Contains(lower, "mac os x"), strings.Contains(lower, "macos"):
 		ver := findMacVersion(lower, ua)
 		name, out := platform.ResolveMacOS(ver)
