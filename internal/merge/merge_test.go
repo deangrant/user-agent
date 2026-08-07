@@ -62,6 +62,50 @@ func TestApplyWindows11FromPlatformVersion(t *testing.T) {
 	if state.OSVersion != "11" {
 		t.Fatalf("os version = %q, want 11", state.OSVersion)
 	}
+	if state.ClientHintsMismatch {
+		t.Fatal("ClientHintsMismatch = true, want false")
+	}
+}
+
+func TestApplyKeepsUAOSOnFamilyConflict(t *testing.T) {
+	state := &detect.State{
+		OSName:    "Android",
+		OSVersion: "13",
+		OSClass:   "Mobile",
+		Hints: hintparse.Hints{
+			Platform:        "Windows",
+			PlatformVersion: "15.0.0",
+		},
+	}
+	Apply(state)
+	if state.OSName != "Android" {
+		t.Fatalf("os name = %q, want Android", state.OSName)
+	}
+	if state.OSVersion != "13" {
+		t.Fatalf("os version = %q, want 13", state.OSVersion)
+	}
+	if !state.ClientHintsMismatch {
+		t.Fatal("ClientHintsMismatch = false, want true")
+	}
+}
+
+func TestApplyEmptyUAOSUsesCH(t *testing.T) {
+	state := &detect.State{
+		Hints: hintparse.Hints{
+			Platform:        "Windows",
+			PlatformVersion: "15.0.0",
+		},
+	}
+	Apply(state)
+	if state.OSName != "Windows" {
+		t.Fatalf("os name = %q, want Windows", state.OSName)
+	}
+	if state.OSVersion != "11" {
+		t.Fatalf("os version = %q, want 11", state.OSVersion)
+	}
+	if state.ClientHintsMismatch {
+		t.Fatal("ClientHintsMismatch = true, want false")
+	}
 }
 
 func TestApplyModelAndBrand(t *testing.T) {

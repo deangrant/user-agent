@@ -52,6 +52,10 @@ r := useragent.ParseWithHints(ua, useragent.ClientHints{
 })
 ```
 
+Client Hints refine OS name/version within the same OS family (for example
+Windows 10 → 11). If the CH platform conflicts with the UA OS family, the UA
+OS is kept and `Result.ClientHintsMismatch` is set.
+
 From an HTTP request:
 
 ```go
@@ -75,6 +79,7 @@ Accept-CH: Sec-CH-UA, Sec-CH-UA-Arch, Sec-CH-UA-Bitness, Sec-CH-UA-Form-Factors,
 | OperatingSystem | Class, Name, Version, VersionBuild, NameVersion |
 | LayoutEngine | Class, Name, Version, VersionMajor, NameVersion, NameVersionMajor |
 | Agent | Class, Name, Version, VersionMajor, NameVersion, NameVersionMajor |
+| (top-level) | UserAgent, AgentSecurity, ClientHintsMismatch |
 
 Convenience helpers: `IsMobile`, `IsTablet`, `IsPhone`, `IsDesktop`,
 `IsComputer`, `IsBot`. `IsBot` covers crawlers and non-browser clients

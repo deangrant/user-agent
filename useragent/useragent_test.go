@@ -156,6 +156,24 @@ func TestParseWithClientHintsWindows11(t *testing.T) {
 	if r.OperatingSystem.Version != "11" {
 		t.Fatalf("windows version = %q", r.OperatingSystem.Version)
 	}
+	if r.ClientHintsMismatch {
+		t.Fatal("ClientHintsMismatch = true, want false")
+	}
+}
+
+func TestParseWithHintsOSFamilyConflict(t *testing.T) {
+	ua := "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 " +
+		"(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+	r := useragent.ParseWithHints(ua, useragent.ClientHints{
+		Platform:        "Windows",
+		PlatformVersion: "15.0.0",
+	})
+	if r.OperatingSystem.Name != "Android" {
+		t.Fatalf("os name = %q, want Android", r.OperatingSystem.Name)
+	}
+	if !r.ClientHintsMismatch {
+		t.Fatal("ClientHintsMismatch = false, want true")
+	}
 }
 
 func TestParseWithHintsMobileOverridesTabletUA(t *testing.T) {

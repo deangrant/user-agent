@@ -197,6 +197,12 @@ func writeResultLines(w io.Writer, result useragent.Result) error {
 			return err
 		}
 	}
+	if result.ClientHintsMismatch {
+		err := writeFieldLine(w, "ClientHintsMismatch", "true", color)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

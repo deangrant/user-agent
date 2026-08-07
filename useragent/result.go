@@ -96,12 +96,13 @@ const (
 // Result holds analyzed fields extracted from a User-Agent and
 // optional Client Hints.
 type Result struct {
-	UserAgent       string
-	Device          Device
-	OperatingSystem OperatingSystem
-	LayoutEngine    LayoutEngine
-	Agent           Agent
-	AgentSecurity   AgentSecurity
+	UserAgent           string
+	Device              Device
+	OperatingSystem     OperatingSystem
+	LayoutEngine        LayoutEngine
+	Agent               Agent
+	AgentSecurity       AgentSecurity
+	ClientHintsMismatch bool
 }
 
 // Device describes the client hardware.

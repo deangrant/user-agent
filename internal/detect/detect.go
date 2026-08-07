@@ -46,6 +46,10 @@ type State struct {
 
 	AgentSecurity string
 
+	// ClientHintsMismatch is set when Client Hints conflict with
+	// UA-derived OS family (e.g. Android UA + Windows CH).
+	ClientHintsMismatch bool
+
 	// BotMatched is set when a known bot pattern matched.
 	BotMatched bool
 	// AppMatched is set when a known app/webview pattern matched.

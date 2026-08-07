@@ -111,6 +111,18 @@ func applyOSHints(state *detect.State) {
 	if name == "iOS" && preferIPadOS(state) {
 		name = "iPadOS"
 	}
+
+	uaName := state.OSName
+	uaEmpty := uaName == "" || uaName == "Unknown"
+	if !uaEmpty && name != "" {
+		uaFam := osFamily(uaName)
+		chFam := osFamily(name)
+		if uaFam != "" && chFam != "" && uaFam != chFam {
+			state.ClientHintsMismatch = true
+			return
+		}
+	}
+
 	if name != "" {
 		// Keep UA-derived iPadOS when CH reports the broader iOS platform.
 		if state.OSName != "iPadOS" || name != "iOS" {
@@ -122,6 +134,28 @@ func applyOSHints(state *detect.State) {
 	}
 	if class != "" && (state.OSClass == "" || state.OSClass == "Unknown") {
 		state.OSClass = class
+	}
+}
+
+// osFamily maps an OS display name to a coarse platform family.
+func osFamily(name string) string {
+	switch strings.ToLower(strings.TrimSpace(name)) {
+	case "windows", "windows phone":
+		return "windows"
+	case "android":
+		return "android"
+	case "ios", "ipados":
+		return "ios"
+	case "macos", "mac os x":
+		return "macos"
+	case "linux", "ubuntu", "debian", "fedora", "unix":
+		return "linux"
+	case "chrome os", "chromeos":
+		return "chromeos"
+	case "":
+		return ""
+	default:
+		return strings.ToLower(strings.TrimSpace(name))
 	}
 }
 

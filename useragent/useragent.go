@@ -162,7 +162,10 @@ func resultFromState(s *detect.State) Result {
 			NameVersion:      s.AgentNameVersion,
 			NameVersionMajor: s.AgentNameVersionMajor,
 		},
-		AgentSecurity: AgentSecurity(orUnknown(s.AgentSecurity, secUnknown)),
+		AgentSecurity: AgentSecurity(
+			orUnknown(s.AgentSecurity, secUnknown),
+		),
+		ClientHintsMismatch: s.ClientHintsMismatch,
 	}
 }
 
