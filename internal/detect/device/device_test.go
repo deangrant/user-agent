@@ -126,3 +126,36 @@ func TestAndroidMobileIsPhone(t *testing.T) {
 		t.Fatalf("class = %q, want Phone", state.DeviceClass)
 	}
 }
+
+func TestGalaxyWatchSMRIsWatch(t *testing.T) {
+	ua := "Mozilla/5.0 (Linux; Android 11; SAMSUNG SM-R860) " +
+		"AppleWebKit/537.36 (KHTML, like Gecko) " +
+		"SamsungBrowser/1.0 Chrome/111.0.0.0 Mobile Safari/537.36"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+		OSName: "Android",
+	}
+	New().Detect(state)
+	if state.DeviceClass != "Watch" {
+		t.Fatalf("class = %q, want Watch", state.DeviceClass)
+	}
+	if state.DeviceBrand != "Samsung" {
+		t.Fatalf("brand = %q, want Samsung", state.DeviceBrand)
+	}
+}
+
+func TestAndroidTVIsTV(t *testing.T) {
+	ua := "Mozilla/5.0 (Linux; Android 11; Android TV; " +
+		"Build/RTM6.230109.121) AppleWebKit/537.36 " +
+		"(KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+		OSName: "Android",
+	}
+	New().Detect(state)
+	if state.DeviceClass != "TV" {
+		t.Fatalf("class = %q, want TV", state.DeviceClass)
+	}
+}

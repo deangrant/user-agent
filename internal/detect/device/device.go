@@ -37,10 +37,10 @@ func (d *Detector) Detect(state *detect.State) {
 	if state.DeviceName == "" {
 		d.extractAndroidModel(state, lower)
 	}
-	// Refine phone vs tablet for Android.
+	// Refine Unknown/Mobile Android UAs that include "Mobile" toward Phone.
+	// Do not override Watch, TV, tablets, or other specific classes.
 	if state.OSName == "Android" &&
 		(state.DeviceClass == uaclass.Mobile ||
-			state.DeviceClass == uaclass.Phone ||
 			state.DeviceClass == uaclass.Unknown ||
 			state.DeviceClass == "") {
 		if strings.Contains(lower, "mobile") {
@@ -63,7 +63,7 @@ func (d *Detector) classify(state *detect.State, lower string) string {
 	case strings.Contains(lower, "ipod"):
 		return uaclass.Mobile
 	case hasAny(lower, "smart-tv", "smarttv", "hbbtv",
-		"bravia", "appletv", "googletv"):
+		"bravia", "appletv", "googletv", "android tv", "androidtv"):
 		return uaclass.TV
 	case hasAny(lower, "chromecast", "crkey", "roku"):
 		return uaclass.SetTopBox
@@ -74,7 +74,9 @@ func (d *Detector) classify(state *detect.State, lower string) string {
 			return uaclass.HandheldGameConsole
 		}
 		return uaclass.GameConsole
-	case containsToken(lower, "watch"):
+	case containsToken(lower, "watch") ||
+		hasAny(lower, "wear os", "wearos") ||
+		strings.Contains(lower, "sm-r"):
 		return uaclass.Watch
 	case strings.Contains(lower, "tesla"):
 		return uaclass.Car
@@ -167,14 +169,29 @@ func (d *Detector) applyBrand(state *detect.State, lower string) {
 		if state.DeviceName == "" && b.Name != "" {
 			state.DeviceName = b.Name
 		}
-		if b.Class != "" &&
-			(state.DeviceClass == "" || state.DeviceClass == uaclass.Unknown ||
-				state.DeviceClass == uaclass.Mobile ||
-				(b.Class == uaclass.Tablet &&
-					state.DeviceClass == uaclass.Phone)) {
+		if b.Class != "" && brandClassOverrides(state.DeviceClass, b.Class) {
 			state.DeviceClass = b.Class
 		}
 		return
+	}
+}
+
+// brandClassOverrides reports whether a brand-derived class should
+// replace the current device class (unknown/mobile, or Phone upgraded
+// to Tablet/Watch/TV).
+func brandClassOverrides(current, brandClass string) bool {
+	if current == "" || current == uaclass.Unknown ||
+		current == uaclass.Mobile {
+		return true
+	}
+	if current != uaclass.Phone {
+		return false
+	}
+	switch brandClass {
+	case uaclass.Tablet, uaclass.Watch, uaclass.TV:
+		return true
+	default:
+		return false
 	}
 }
 

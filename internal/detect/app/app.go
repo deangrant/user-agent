@@ -76,18 +76,9 @@ func (d *Detector) Detect(state *detect.State) {
 }
 
 func isBrowserOnly(p *data.AppPattern) bool {
-	if p.AgentClass != uaclass.Browser {
-		return false
-	}
-	switch strings.ToLower(p.Name) {
-	case "edge", "opera", "opera touch", "brave", "vivaldi",
-		"yandex browser", "qq browser", "miuibrowser",
-		"huaweibrowser", "heytapbrowser", "samsung browser",
-		"uc browser", "duckduckgo", "ecosia", "mobile safari":
-		return true
-	default:
-		return false
-	}
+	// Standalone browsers belong to the agent detector. Browser-class
+	// rows that also set a device class (e.g. Chromecast) still apply.
+	return p.AgentClass == uaclass.Browser && p.DeviceClass == ""
 }
 
 func applyApp(state *detect.State, p *data.AppPattern) {

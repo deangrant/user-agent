@@ -82,3 +82,22 @@ func TestDetectBrowserOnlyEdgeNotApp(t *testing.T) {
 		t.Fatalf("AppMatched = true for Edge browser UA; agent=%#v", state)
 	}
 }
+
+func TestDetectChromecastApplies(t *testing.T) {
+	ua := "Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 " +
+		"(KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 CrKey/1.56.500000"
+	state := &detect.State{
+		UA:     ua,
+		Tokens: tokenize.Parse(ua),
+	}
+	New().Detect(state)
+	if !state.AppMatched {
+		t.Fatal("AppMatched = false, want true for Chromecast")
+	}
+	if state.AgentName != "Chromecast" {
+		t.Fatalf("agent = %q, want Chromecast", state.AgentName)
+	}
+	if state.DeviceClass != "Set-top box" {
+		t.Fatalf("device class = %q, want Set-top box", state.DeviceClass)
+	}
+}

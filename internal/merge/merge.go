@@ -210,27 +210,51 @@ func applyDeviceHints(state *detect.State) {
 }
 
 func formFactorClass(factors []string) string {
+	type hit struct {
+		phone, tablet, desktop, xr, car, tv, watch, ereader bool
+	}
+	var h hit
 	for _, f := range factors {
 		switch strings.ToLower(strings.TrimSpace(f)) {
 		case "mobile", "phone":
-			return uaclass.Phone
+			h.phone = true
 		case "tablet":
-			return uaclass.Tablet
+			h.tablet = true
 		case "desktop", "computer":
-			return uaclass.Desktop
+			h.desktop = true
 		case "xr", "xr-compatible", "immersive-xr":
-			return uaclass.VirtualReality
+			h.xr = true
 		case "automotive", "car":
-			return uaclass.Car
+			h.car = true
 		case "tv", "television":
-			return uaclass.TV
+			h.tv = true
 		case "watch", "wristband":
-			return uaclass.Watch
+			h.watch = true
 		case "ereader":
-			return uaclass.EReader
+			h.ereader = true
 		}
 	}
-	return ""
+	// Prefer specific form factors over generic Mobile/Phone.
+	switch {
+	case h.watch:
+		return uaclass.Watch
+	case h.tv:
+		return uaclass.TV
+	case h.tablet:
+		return uaclass.Tablet
+	case h.xr:
+		return uaclass.VirtualReality
+	case h.car:
+		return uaclass.Car
+	case h.ereader:
+		return uaclass.EReader
+	case h.phone:
+		return uaclass.Phone
+	case h.desktop:
+		return uaclass.Desktop
+	default:
+		return ""
+	}
 }
 
 func applyCPUHints(state *detect.State) {

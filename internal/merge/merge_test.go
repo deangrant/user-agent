@@ -154,6 +154,19 @@ func TestApplyFormFactorsTablet(t *testing.T) {
 	}
 }
 
+func TestApplyFormFactorsWatchOverMobile(t *testing.T) {
+	state := &detect.State{
+		DeviceClass: "Phone",
+		Hints: hintparse.Hints{
+			FormFactors: []string{"Mobile", "Watch"},
+		},
+	}
+	Apply(state)
+	if state.DeviceClass != "Watch" {
+		t.Fatalf("class = %q, want Watch", state.DeviceClass)
+	}
+}
+
 func TestApplyMobileOverridesTablet(t *testing.T) {
 	state := &detect.State{
 		DeviceClass: "Tablet",
