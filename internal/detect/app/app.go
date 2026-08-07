@@ -9,15 +9,34 @@ import (
 	"github.com/deangrant/user-agent/internal/detect"
 )
 
+// entry is a compiled app pattern ready for matching.
+type entry struct {
+	pattern data.AppPattern
+	needle  string // lowercased substring for Contains matches
+	re      *regexp.Regexp
+}
+
 // Detector identifies applications and webviews.
 type Detector struct {
-	apps []data.AppPattern
+	apps []entry
 }
 
 // New returns an app Detector using embedded patterns.
 func New() *Detector {
 	c := data.MustLoad()
-	return &Detector{apps: c.Apps}
+	apps := make([]entry, 0, len(c.Apps))
+	for i := range c.Apps {
+		p := c.Apps[i]
+		e := entry{
+			pattern: p,
+			needle:  strings.ToLower(p.Pattern),
+		}
+		if strings.Contains(p.Pattern, ".*") {
+			e.re = regexp.MustCompile("(?i)" + p.Pattern)
+		}
+		apps = append(apps, e)
+	}
+	return &Detector{apps: apps}
 }
 
 // Detect implements detect.Detector.
@@ -28,15 +47,11 @@ func (d *Detector) Detect(state *detect.State) {
 	ua := strings.ToLower(state.UA)
 
 	for i := range d.apps {
-		p := &d.apps[i]
-		pat := strings.ToLower(p.Pattern)
+		e := &d.apps[i]
 		matched := false
-		if strings.Contains(pat, ".*") {
-			re, err := regexp.Compile("(?i)" + p.Pattern)
-			if err == nil && re.MatchString(state.UA) {
-				matched = true
-			}
-		} else if strings.Contains(ua, pat) {
+		if e.re != nil {
+			matched = e.re.MatchString(state.UA)
+		} else if strings.Contains(ua, e.needle) {
 			matched = true
 		}
 		if !matched {
@@ -45,10 +60,10 @@ func (d *Detector) Detect(state *detect.State) {
 		// Skip patterns that are primarily browser identifiers;
 		// those belong to the agent detector unless they set a
 		// non-browser class.
-		if isBrowserOnly(p) {
+		if isBrowserOnly(&e.pattern) {
 			continue
 		}
-		applyApp(state, p)
+		applyApp(state, &e.pattern)
 		return
 	}
 
