@@ -1,4 +1,10 @@
 // Package hintparse parses Sec-CH-UA* Client Hints header values.
+//
+// Parsing uses an RFC 8941 structured-fields subset for the shapes
+// Client Hints actually send (lists of items with parameters, strings,
+// tokens, and booleans). It is not a full structured-fields
+// implementation: dictionaries, integers, decimals, byte sequences,
+// and inner lists are not supported.
 package hintparse
 
 import (
@@ -59,22 +65,22 @@ func Parse(headers map[string]string) Hints {
 		h.FullVersionList = ParseBrandList(v)
 	}
 	if v := get("sec-ch-ua-full-version"); v != "" {
-		h.FullVersion = Unquote(v)
+		h.FullVersion = parseSFStringValue(v)
 	}
 	if v := get("sec-ch-ua-platform"); v != "" {
-		h.Platform = Unquote(v)
+		h.Platform = parseSFStringValue(v)
 	}
 	if v := get("sec-ch-ua-platform-version"); v != "" {
-		h.PlatformVersion = Unquote(v)
+		h.PlatformVersion = parseSFStringValue(v)
 	}
 	if v := get("sec-ch-ua-model"); v != "" {
-		h.Model = Unquote(v)
+		h.Model = parseSFStringValue(v)
 	}
 	if v := get("sec-ch-ua-arch"); v != "" {
-		h.Arch = Unquote(v)
+		h.Arch = parseSFStringValue(v)
 	}
 	if v := get("sec-ch-ua-bitness"); v != "" {
-		h.Bitness = Unquote(v)
+		h.Bitness = parseSFStringValue(v)
 	}
 	if v := get("sec-ch-ua-form-factors"); v != "" {
 		h.FormFactors = ParseFormFactors(v)
@@ -88,95 +94,55 @@ func Parse(headers map[string]string) Hints {
 	return h
 }
 
-// ParseBrandList parses Sec-CH-UA brand list header values.
+// ParseBrandList parses Sec-CH-UA / Full-Version-List as an sf-list of
+// items with a string/token brand and optional v parameter.
 func ParseBrandList(s string) []BrandVersion {
-	s = strings.TrimSpace(s)
-	if s == "" {
+	items := parseSFList(s)
+	if len(items) == 0 {
 		return nil
 	}
 	var out []BrandVersion
-	for _, part := range splitList(s) {
-		part = strings.TrimSpace(part)
-		if part == "" {
+	for _, item := range items {
+		if item.Value == "" {
 			continue
 		}
-		brand, version := parseBrandPart(part)
-		if brand == "" {
-			continue
+		ver := ""
+		if item.Params != nil {
+			ver = item.Params["v"]
 		}
-		out = append(out, BrandVersion{Brand: brand, Version: version})
+		out = append(out, BrandVersion{Brand: item.Value, Version: ver})
 	}
 	return out
 }
 
-func parseBrandPart(part string) (brand, version string) {
-	// brand;v="version" — brand may contain ';' inside quotes.
-	semi := indexSeparatorSemi(part)
-	if semi < 0 {
-		return Unquote(part), ""
-	}
-	brand = Unquote(strings.TrimSpace(part[:semi]))
-	rest := strings.TrimSpace(part[semi+1:])
-	restLower := strings.ToLower(rest)
-	if strings.HasPrefix(restLower, "v=") {
-		version = Unquote(strings.TrimSpace(rest[2:]))
-	}
-	return brand, version
-}
-
-// indexSeparatorSemi finds the ';' that separates brand from v=,
-// ignoring semicolons inside double quotes.
-func indexSeparatorSemi(s string) int {
-	inQuotes := false
-	for i := 0; i < len(s); i++ {
-		switch s[i] {
-		case '"':
-			inQuotes = !inQuotes
-		case '\\':
-			if inQuotes && i+1 < len(s) {
-				i++
-			}
-		case ';':
-			if !inQuotes {
-				return i
-			}
-		}
-	}
-	return -1
-}
-
-// ParseFormFactors parses a quoted list of form factors.
+// ParseFormFactors parses Sec-CH-UA-Form-Factors as an sf-list of strings.
 func ParseFormFactors(s string) []string {
-	s = strings.TrimSpace(s)
-	if s == "" {
+	items := parseSFList(s)
+	if len(items) == 0 {
 		return nil
 	}
-	// May be a single quoted value or a list.
-	if !strings.Contains(s, ",") {
-		v := Unquote(s)
-		if v == "" {
-			return nil
-		}
-		return []string{v}
-	}
 	var out []string
-	for _, part := range splitList(s) {
-		v := Unquote(strings.TrimSpace(part))
-		if v != "" {
-			out = append(out, v)
+	for _, item := range items {
+		if item.Value != "" {
+			out = append(out, item.Value)
 		}
 	}
 	return out
 }
 
-// ParseBoolean parses Client Hints booleans (?0 / ?1 / true / false).
+// ParseBoolean parses Client Hints booleans.
+// Prefers RFC 8941 sf-boolean (?0 / ?1); also accepts true/false/0/1
+// for backward compatibility.
 func ParseBoolean(s string) *bool {
+	if b := parseSFBoolean(s); b != nil {
+		return b
+	}
 	s = strings.TrimSpace(Unquote(s))
 	switch strings.ToLower(s) {
-	case "?1", "1", "true":
+	case "1", "true":
 		v := true
 		return &v
-	case "?0", "0", "false":
+	case "0", "false":
 		v := false
 		return &v
 	default:
@@ -187,12 +153,21 @@ func ParseBoolean(s string) *bool {
 	}
 }
 
-// Unquote strips surrounding double quotes and unescapes \" .
+// Unquote strips surrounding double quotes using sf-string rules
+// (\" and \\), or returns a trimmed bare token.
 func Unquote(s string) string {
 	s = strings.TrimSpace(s)
-	if len(s) >= 2 && s[0] == '"' && s[len(s)-1] == '"' {
-		s = s[1 : len(s)-1]
-		s = strings.ReplaceAll(s, `\"`, `"`)
+	if s == "" {
+		return ""
+	}
+	if s[0] == '"' {
+		if v, _, ok := parseSFString(s); ok {
+			return v
+		}
+		// Fallback for malformed quotes: strip outer quotes only.
+		if len(s) >= 2 && s[len(s)-1] == '"' {
+			return s[1 : len(s)-1]
+		}
 	}
 	return s
 }
@@ -233,37 +208,4 @@ func isGreaseBrand(brand string) bool {
 		return true
 	}
 	return false
-}
-
-func splitList(s string) []string {
-	var parts []string
-	var b strings.Builder
-	inQuotes := false
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		switch c {
-		case '"':
-			inQuotes = !inQuotes
-			b.WriteByte(c)
-		case '\\':
-			if i+1 < len(s) {
-				b.WriteByte(c)
-				i++
-				b.WriteByte(s[i])
-			}
-		case ',':
-			if inQuotes {
-				b.WriteByte(c)
-			} else {
-				parts = append(parts, b.String())
-				b.Reset()
-			}
-		default:
-			b.WriteByte(c)
-		}
-	}
-	if b.Len() > 0 {
-		parts = append(parts, b.String())
-	}
-	return parts
 }

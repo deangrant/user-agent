@@ -193,6 +193,8 @@ func TestRunParseWithHintFlags(t *testing.T) {
 		"parse",
 		"-sec-ch-ua-platform", `"Windows"`,
 		"-sec-ch-ua-platform-version", `"0.1.0"`,
+		"-sec-ch-ua-full-version", `"100.0.4896.75"`,
+		"-sec-ch-ua-wow64", "?0",
 		"-sec-ch-ua-full-version-list",
 		`"Google Chrome";v="100.0.4896.75", "Chromium";v="100.0.4896.75"`,
 		ua,

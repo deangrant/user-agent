@@ -27,6 +27,7 @@ type parseFlags struct {
 
 	secCHUA                string
 	secCHUAFullVersionList string
+	secCHUAFullVersion     string
 	secCHUAPlatform        string
 	secCHUAPlatformVersion string
 	secCHUAMobile          string
@@ -34,6 +35,7 @@ type parseFlags struct {
 	secCHUAArch            string
 	secCHUABitness         string
 	secCHUAFormFactors     string
+	secCHUAWoW64           string
 }
 
 func runParse(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
@@ -46,6 +48,8 @@ func runParse(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 	fs.StringVar(&f.secCHUA, "sec-ch-ua", "", "Sec-CH-UA value")
 	fs.StringVar(&f.secCHUAFullVersionList, "sec-ch-ua-full-version-list", "",
 		"Sec-CH-UA-Full-Version-List value")
+	fs.StringVar(&f.secCHUAFullVersion, "sec-ch-ua-full-version", "",
+		"Sec-CH-UA-Full-Version value")
 	fs.StringVar(&f.secCHUAPlatform, "sec-ch-ua-platform", "",
 		"Sec-CH-UA-Platform value")
 	fs.StringVar(&f.secCHUAPlatformVersion, "sec-ch-ua-platform-version", "",
@@ -60,6 +64,8 @@ func runParse(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 		"Sec-CH-UA-Bitness value")
 	fs.StringVar(&f.secCHUAFormFactors, "sec-ch-ua-form-factors", "",
 		"Sec-CH-UA-Form-Factors value")
+	fs.StringVar(&f.secCHUAWoW64, "sec-ch-ua-wow64", "",
+		"Sec-CH-UA-WoW64 value")
 
 	fs.Usage = func() {
 		fmt.Fprint(stderr, `Usage:
@@ -112,6 +118,7 @@ func applyHintFlags(h http.Header, f parseFlags) {
 	}
 	set("Sec-CH-UA", f.secCHUA)
 	set("Sec-CH-UA-Full-Version-List", f.secCHUAFullVersionList)
+	set("Sec-CH-UA-Full-Version", f.secCHUAFullVersion)
 	set("Sec-CH-UA-Platform", f.secCHUAPlatform)
 	set("Sec-CH-UA-Platform-Version", f.secCHUAPlatformVersion)
 	set("Sec-CH-UA-Mobile", f.secCHUAMobile)
@@ -119,6 +126,7 @@ func applyHintFlags(h http.Header, f parseFlags) {
 	set("Sec-CH-UA-Arch", f.secCHUAArch)
 	set("Sec-CH-UA-Bitness", f.secCHUABitness)
 	set("Sec-CH-UA-Form-Factors", f.secCHUAFormFactors)
+	set("Sec-CH-UA-WoW64", f.secCHUAWoW64)
 }
 
 // headersFromReader parses MIME-style HTTP headers from r until a blank

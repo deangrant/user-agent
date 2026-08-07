@@ -56,6 +56,10 @@ Client Hints refine OS name/version within the same OS family (for example
 Windows 10 → 11). If the CH platform conflicts with the UA OS family, the UA
 OS is kept and `Result.ClientHintsMismatch` is set.
 
+Header values are parsed as an RFC 8941 structured-fields subset for the
+shapes Client Hints use (lists of items with parameters, strings, tokens,
+and booleans)—not a full structured-fields implementation.
+
 From an HTTP request:
 
 ```go
@@ -68,7 +72,7 @@ To receive high-entropy hints, send an `Accept-CH` response header, for
 example:
 
 ```
-Accept-CH: Sec-CH-UA, Sec-CH-UA-Arch, Sec-CH-UA-Bitness, Sec-CH-UA-Form-Factors, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Mobile, Sec-CH-UA-Model, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version
+Accept-CH: Sec-CH-UA, Sec-CH-UA-Arch, Sec-CH-UA-Bitness, Sec-CH-UA-Form-Factors, Sec-CH-UA-Full-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Mobile, Sec-CH-UA-Model, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version, Sec-CH-UA-WoW64
 ```
 
 ## Result fields
