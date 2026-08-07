@@ -90,12 +90,15 @@ when detectable. For bots, apps, and HTTP libraries without a layout engine
 in the UA, Name may be empty—use `LayoutEngine.Class` and `Agent` instead.
 
 Convenience helpers: `IsMobile`, `IsTablet`, `IsPhone`, `IsDesktop`,
-`IsComputer`, `IsBot`. `IsBot` covers crawlers and non-browser clients
-such as HTTP libraries (curl, okhttp), cloud apps, hacker tools, and
-test clients—not only robots.
+`IsComputer`, `IsBot`. `IsComputer` is an alias of `IsDesktop`. `IsBot`
+covers crawlers and non-browser clients such as HTTP libraries (curl,
+okhttp), cloud apps, hacker tools, and test clients—not only robots.
 
 Unknown values use empty strings and `*Unknown` class constants. Parsing
 never returns an error; partial results are normal for sparse inputs.
+The embedded pattern catalog loads on first use; a corrupt catalog would
+panic at init (not for ordinary UA strings). Released builds ship valid
+data.
 
 ## Analyzer
 

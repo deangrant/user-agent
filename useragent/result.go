@@ -192,8 +192,8 @@ func (r Result) IsBot() bool {
 	return false
 }
 
-// IsComputer reports whether the device is a general-purpose computer
-// (desktop class).
+// IsComputer is equivalent to IsDesktop: both report whether
+// Device.Class is desktop (including laptops).
 func (r Result) IsComputer() bool {
 	return r.IsDesktop()
 }
