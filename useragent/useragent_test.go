@@ -227,6 +227,60 @@ func TestParseInstagramApp(t *testing.T) {
 	}
 }
 
+func TestParseWhatsAppAppNotBot(t *testing.T) {
+	ua := "Mozilla/5.0 (Linux; Android 13; Pixel 7) " +
+		"AppleWebKit/537.36 (KHTML, like Gecko) " +
+		"Chrome/120.0.0.0 Mobile Safari/537.36 WhatsApp/2.23.25.76"
+	r := useragent.Parse(ua)
+	if r.IsBot() {
+		t.Fatalf("IsBot = true, want false; agent=%#v device=%#v",
+			r.Agent, r.Device)
+	}
+	if r.Agent.Class != useragent.AgentClassMobileApp {
+		t.Fatalf("class = %q, want Mobile App", r.Agent.Class)
+	}
+	if r.Agent.Name != "WhatsApp" {
+		t.Fatalf("agent = %q, want WhatsApp", r.Agent.Name)
+	}
+}
+
+func TestParseWhatsAppPreviewIsBot(t *testing.T) {
+	ua := "WhatsApp/2.23.25.76 A"
+	r := useragent.Parse(ua)
+	if !r.IsBot() {
+		t.Fatalf("IsBot = false, want true; result=%#v", r)
+	}
+}
+
+func TestParsePinterestAppNotBot(t *testing.T) {
+	ua := "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) " +
+		"AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 " +
+		"Pinterest/11.20"
+	r := useragent.Parse(ua)
+	if r.IsBot() {
+		t.Fatalf("IsBot = true, want false; agent=%#v device=%#v",
+			r.Agent, r.Device)
+	}
+	if r.Agent.Class != useragent.AgentClassMobileApp {
+		t.Fatalf("class = %q, want Mobile App", r.Agent.Class)
+	}
+	if r.Agent.Name != "Pinterest" {
+		t.Fatalf("agent = %q, want Pinterest", r.Agent.Name)
+	}
+}
+
+func TestParsePinterestbotIsBot(t *testing.T) {
+	ua := "Mozilla/5.0 (compatible; Pinterestbot/1.0; " +
+		"+http://www.pinterest.com/bot.html)"
+	r := useragent.Parse(ua)
+	if !r.IsBot() {
+		t.Fatalf("IsBot = false, want true; result=%#v", r)
+	}
+	if r.Agent.Name != "Pinterestbot" {
+		t.Fatalf("agent = %q, want Pinterestbot", r.Agent.Name)
+	}
+}
+
 func TestClientHintsFromMap(t *testing.T) {
 	h := useragent.ClientHintsFromMap(map[string]string{
 		"Sec-CH-UA-Platform": `"Linux"`,
