@@ -41,7 +41,7 @@ func Parse(ua string) Tokens {
 				if comment != "" {
 					t.Comments = append(t.Comments, splitComment(comment)...)
 				}
-				appendProducts(&t, rest)
+				scanProducts(&t, rest)
 				break
 			}
 			comment := strings.TrimSpace(ua[i+1 : closeIdx])
@@ -55,7 +55,7 @@ func Parse(ua string) Tokens {
 		for i < len(ua) && !isSep(ua[i]) && ua[i] != '(' {
 			i++
 		}
-		appendProductToken(&t, ua[start:i])
+		i = attachOrAppendProduct(&t, ua, start, i)
 	}
 	return t
 }
@@ -78,7 +78,7 @@ func findMatchingParen(ua string, open int) (closeIdx int, ok bool) {
 	return 0, false
 }
 
-func appendProducts(t *Tokens, s string) {
+func scanProducts(t *Tokens, s string) {
 	i := 0
 	for i < len(s) {
 		for i < len(s) && isSep(s[i]) {
@@ -95,18 +95,55 @@ func appendProducts(t *Tokens, s string) {
 		for i < len(s) && !isSep(s[i]) && s[i] != '(' {
 			i++
 		}
-		appendProductToken(t, s[start:i])
+		i = attachOrAppendProduct(t, s, start, i)
 	}
 }
 
-func appendProductToken(t *Tokens, token string) {
-	name, version := splitProduct(token)
-	if name != "" {
-		t.Products = append(t.Products, Product{
-			Name:    name,
-			Version: version,
-		})
+// attachOrAppendProduct adds ua[start:end] as a product. When the product
+// has no slash version, a following dotted numeric token is merged in.
+// Returns the index after any consumed version token.
+func attachOrAppendProduct(t *Tokens, ua string, start, end int) int {
+	name, version := splitProduct(ua[start:end])
+	if name == "" {
+		return end
 	}
+	next := end
+	if version == "" {
+		if ver, after, ok := peekDottedVersion(ua, end); ok {
+			version = ver
+			next = after
+		}
+	}
+	t.Products = append(t.Products, Product{
+		Name:    name,
+		Version: version,
+	})
+	return next
+}
+
+// peekDottedVersion looks past whitespace for a digit/dot token that
+// contains at least one '.' (e.g. "269.0.0.18.75").
+func peekDottedVersion(ua string, i int) (ver string, after int, ok bool) {
+	j := i
+	for j < len(ua) && isSep(ua[j]) {
+		j++
+	}
+	if j >= len(ua) || ua[j] == '(' {
+		return "", i, false
+	}
+	start := j
+	for j < len(ua) && !isSep(ua[j]) && ua[j] != '(' {
+		j++
+	}
+	tok := ua[start:j]
+	if !isDottedVersion(tok) {
+		return "", i, false
+	}
+	return tok, j, true
+}
+
+func isDottedVersion(s string) bool {
+	return IsDigitRun(s) && strings.Contains(s, ".")
 }
 
 // FindProduct returns the first product with the given name

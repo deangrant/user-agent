@@ -25,6 +25,9 @@ func TestDetectInstagram(t *testing.T) {
 	if state.AgentClass != "Mobile App" {
 		t.Fatalf("class = %q, want Mobile App", state.AgentClass)
 	}
+	if state.AgentVersion != "269.0.0.18.75" {
+		t.Fatalf("version = %q, want 269.0.0.18.75", state.AgentVersion)
+	}
 }
 
 func TestDetectSkipsWhenBotMatched(t *testing.T) {

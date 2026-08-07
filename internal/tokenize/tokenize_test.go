@@ -62,3 +62,26 @@ func TestParseUnclosedParenKeepsProducts(t *testing.T) {
 		t.Fatalf("comments = %v, want Android", tok.Comments)
 	}
 }
+
+func TestParseSpaceSeparatedVersion(t *testing.T) {
+	ua := "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) " +
+		"AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 " +
+		"Instagram 269.0.0.18.75"
+	tok := tokenize.Parse(ua)
+	p, ok := tok.FindProduct("Instagram")
+	if !ok {
+		t.Fatalf("products = %v, want Instagram", tok.Products)
+	}
+	if p.Version != "269.0.0.18.75" {
+		t.Fatalf("Instagram version = %q, want 269.0.0.18.75", p.Version)
+	}
+	for _, prod := range tok.Products {
+		if prod.Name == "269.0.0.18.75" {
+			t.Fatalf("standalone version product present: %v", tok.Products)
+		}
+	}
+	mobile, ok := tok.FindProduct("Mobile")
+	if !ok || mobile.Version != "15E148" {
+		t.Fatalf("Mobile slash product = %v ok=%v", mobile, ok)
+	}
+}

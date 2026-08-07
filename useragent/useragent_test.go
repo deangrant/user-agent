@@ -239,6 +239,9 @@ func TestParseInstagramApp(t *testing.T) {
 	if r.Agent.Class != useragent.AgentClassMobileApp {
 		t.Fatalf("class = %q", r.Agent.Class)
 	}
+	if r.Agent.Version != "269.0.0.18.75" {
+		t.Fatalf("version = %q, want 269.0.0.18.75", r.Agent.Version)
+	}
 }
 
 func TestParseWhatsAppAppNotBot(t *testing.T) {
