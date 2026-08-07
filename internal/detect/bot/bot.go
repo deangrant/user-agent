@@ -6,6 +6,7 @@ import (
 
 	"github.com/deangrant/user-agent/internal/data"
 	"github.com/deangrant/user-agent/internal/detect"
+	"github.com/deangrant/user-agent/internal/uaclass"
 )
 
 // Detector identifies bots and similar non-browser clients.
@@ -52,35 +53,42 @@ func applyBot(state *detect.State, p *data.BotPattern) {
 	if p.DeviceClass != "" {
 		state.DeviceClass = p.DeviceClass
 	}
-	if p.AgentClass == "Hacker" || p.DeviceClass == "Hacker" {
-		state.AgentSecurity = "Hacker"
+	if p.AgentClass == uaclass.Hacker || p.DeviceClass == uaclass.Hacker {
+		state.AgentSecurity = uaclass.Hacker
 	}
 	if state.EngineClass == "" {
 		switch p.AgentClass {
-		case "Robot", "Testclient", "Hacker", "Server", "Cloud Application":
+		case uaclass.Robot,
+			uaclass.TestClient,
+			uaclass.Hacker,
+			uaclass.Server,
+			uaclass.CloudApp:
 			state.EngineClass = mapEngineClass(p.AgentClass)
 		}
 	}
 	if state.OSClass == "" {
 		switch p.DeviceClass {
-		case "Hacker":
-			state.OSClass = "Hacker"
-		case "Cloud", "Robot", "Robot Mobile", "Robot Imitator":
-			state.OSClass = "Cloud"
+		case uaclass.Hacker:
+			state.OSClass = uaclass.Hacker
+		case uaclass.Cloud,
+			uaclass.Robot,
+			uaclass.RobotMobile,
+			uaclass.RobotImitator:
+			state.OSClass = uaclass.Cloud
 		}
 	}
 }
 
 func mapEngineClass(agentClass string) string {
 	switch agentClass {
-	case "Robot", "Testclient":
-		return "Robot"
-	case "Hacker":
-		return "Hacker"
-	case "Server", "Cloud Application":
-		return "Cloud"
+	case uaclass.Robot, uaclass.TestClient:
+		return uaclass.Robot
+	case uaclass.Hacker:
+		return uaclass.Hacker
+	case uaclass.Server, uaclass.CloudApp:
+		return uaclass.Cloud
 	default:
-		return "Unknown"
+		return uaclass.Unknown
 	}
 }
 

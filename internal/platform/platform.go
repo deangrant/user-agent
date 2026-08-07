@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/deangrant/user-agent/internal/uaclass"
 	"github.com/deangrant/user-agent/internal/version"
 )
 
@@ -71,26 +72,26 @@ func ResolveFromCH(platform, platformVersion string) (name, ver, class string) {
 	switch strings.ToLower(p) {
 	case "windows":
 		name, ver = ResolveWindows(platformVersion)
-		return name, ver, "Desktop"
+		return name, ver, uaclass.Desktop
 	case "macos", "mac os x", "macOS":
 		name, ver = ResolveMacOS(platformVersion)
-		return name, ver, "Desktop"
+		return name, ver, uaclass.Desktop
 	case "android":
 		ver = strings.TrimSpace(platformVersion)
 		if ver == "" {
-			return "Android", "", "Mobile"
+			return "Android", "", uaclass.Mobile
 		}
-		return "Android", version.FirstNumber(ver), "Mobile"
+		return "Android", version.FirstNumber(ver), uaclass.Mobile
 	case "ios":
 		ver = strings.TrimSpace(platformVersion)
-		return "iOS", version.NormalizeSeparators(ver), "Mobile"
+		return "iOS", version.NormalizeSeparators(ver), uaclass.Mobile
 	case "ipados":
 		ver = strings.TrimSpace(platformVersion)
-		return "iPadOS", version.NormalizeSeparators(ver), "Mobile"
+		return "iPadOS", version.NormalizeSeparators(ver), uaclass.Mobile
 	case "linux":
-		return "Linux", strings.TrimSpace(platformVersion), "Desktop"
+		return "Linux", strings.TrimSpace(platformVersion), uaclass.Desktop
 	case "chrome os", "chromeos":
-		return "Chrome OS", strings.TrimSpace(platformVersion), "Desktop"
+		return "Chrome OS", strings.TrimSpace(platformVersion), uaclass.Desktop
 	case "":
 		return "", "", ""
 	default:

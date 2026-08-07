@@ -6,6 +6,7 @@ import (
 
 	"github.com/deangrant/user-agent/internal/detect"
 	"github.com/deangrant/user-agent/internal/platform"
+	"github.com/deangrant/user-agent/internal/uaclass"
 	"github.com/deangrant/user-agent/internal/version"
 )
 
@@ -30,20 +31,20 @@ func (d *Detector) Detect(state *detect.State) {
 	switch {
 	case strings.Contains(lower, "windows phone"):
 		ver := findAfter(lower, ua, "windows phone ")
-		state.SetOS("Mobile", "Windows Phone", version.FirstNumber(ver))
+		state.SetOS(uaclass.Mobile, "Windows Phone", version.FirstNumber(ver))
 	case strings.Contains(lower, "windows nt"):
 		nt := findAfter(lower, ua, "windows nt ")
 		nt = trimToken(nt)
 		mapped := platform.MapWindowsNT(nt)
-		state.SetOS("Desktop", "Windows", mapped)
+		state.SetOS(uaclass.Desktop, "Windows", mapped)
 		setCPUFromUA(state, lower)
 	case strings.Contains(lower, "windows "):
 		ver := findAfter(lower, ua, "windows ")
-		state.SetOS("Desktop", "Windows", trimToken(ver))
+		state.SetOS(uaclass.Desktop, "Windows", trimToken(ver))
 	case strings.Contains(lower, "android"):
 		ver := findAfter(lower, ua, "android ")
 		ver = trimToken(ver)
-		state.SetOS("Mobile", "Android", version.NormalizeSeparators(ver))
+		state.SetOS(uaclass.Mobile, "Android", version.NormalizeSeparators(ver))
 		if i := strings.Index(lower, "build/"); i >= 0 {
 			build := trimToken(ua[i+6:])
 			state.OSVersionBuild = build
@@ -52,61 +53,61 @@ func (d *Detector) Detect(state *detect.State) {
 		(strings.Contains(lower, "cpu os ") ||
 			strings.Contains(lower, "os ")):
 		ver := iosVersion(lower, ua)
-		state.SetOS("Mobile", "iPadOS", ver)
+		state.SetOS(uaclass.Mobile, "iPadOS", ver)
 	case strings.Contains(lower, "cpu iphone os"),
 		strings.Contains(lower, "cpu os "),
 		strings.Contains(lower, "iphone os"):
 		ver := iosVersion(lower, ua)
-		state.SetOS("Mobile", "iOS", ver)
+		state.SetOS(uaclass.Mobile, "iOS", ver)
 	case strings.Contains(lower, "mac os x"), strings.Contains(lower, "macos"):
 		ver := findMacVersion(lower, ua)
 		name, out := platform.ResolveMacOS(ver)
-		state.SetOS("Desktop", name, out)
+		state.SetOS(uaclass.Desktop, name, out)
 	case strings.Contains(lower, "cros "):
 		ver := chromeOSVersion(state)
-		state.SetOS("Desktop", "Chrome OS", ver)
+		state.SetOS(uaclass.Desktop, "Chrome OS", ver)
 	case strings.Contains(lower, "harmonyos"):
 		ver := findAfter(lower, ua, "harmonyos ")
-		state.SetOS("Mobile", "HarmonyOS", trimToken(ver))
+		state.SetOS(uaclass.Mobile, "HarmonyOS", trimToken(ver))
 	case strings.Contains(lower, "watchos"):
 		ver := findAfter(lower, ua, "watchos ")
-		state.SetOS("Mobile", "watchOS",
+		state.SetOS(uaclass.Mobile, "watchOS",
 			version.NormalizeSeparators(trimToken(ver)))
 	case strings.Contains(lower, "tvos") ||
 		strings.Contains(lower, "apple tv"):
 		ver := findAfter(lower, ua, "tvos ")
-		state.SetOS("Embedded", "tvOS",
+		state.SetOS(uaclass.Embedded, "tvOS",
 			version.NormalizeSeparators(trimToken(ver)))
 	case strings.Contains(lower, "freebsd"):
-		state.SetOS("Desktop", "FreeBSD", "")
+		state.SetOS(uaclass.Desktop, "FreeBSD", "")
 	case strings.Contains(lower, "openbsd"):
-		state.SetOS("Desktop", "OpenBSD", "")
+		state.SetOS(uaclass.Desktop, "OpenBSD", "")
 	case strings.Contains(lower, "netbsd"):
-		state.SetOS("Desktop", "NetBSD", "")
+		state.SetOS(uaclass.Desktop, "NetBSD", "")
 	case strings.Contains(lower, "sunos"):
-		state.SetOS("Desktop", "SunOS", "")
+		state.SetOS(uaclass.Desktop, "SunOS", "")
 	case strings.Contains(lower, "webos") || strings.Contains(lower, "web0s"):
-		state.SetOS("Embedded", "webOS", "")
+		state.SetOS(uaclass.Embedded, "webOS", "")
 	case strings.Contains(lower, "tizen"):
 		ver := findAfter(lower, ua, "tizen ")
-		state.SetOS("Embedded", "Tizen", trimToken(ver))
+		state.SetOS(uaclass.Embedded, "Tizen", trimToken(ver))
 	case strings.Contains(lower, "kaios"):
 		ver := findAfter(lower, ua, "kaios/")
 		if ver == "" {
 			ver = findAfter(lower, ua, "kaios ")
 		}
-		state.SetOS("Mobile", "KaiOS", trimToken(ver))
+		state.SetOS(uaclass.Mobile, "KaiOS", trimToken(ver))
 	case strings.Contains(lower, "fedora"):
-		state.SetOS("Desktop", "Fedora", "")
+		state.SetOS(uaclass.Desktop, "Fedora", "")
 	case strings.Contains(lower, "ubuntu"):
-		state.SetOS("Desktop", "Ubuntu", "")
+		state.SetOS(uaclass.Desktop, "Ubuntu", "")
 	case strings.Contains(lower, "debian"):
-		state.SetOS("Desktop", "Debian", "")
+		state.SetOS(uaclass.Desktop, "Debian", "")
 	case strings.Contains(lower, "linux"):
-		state.SetOS("Desktop", "Linux", "")
+		state.SetOS(uaclass.Desktop, "Linux", "")
 		setCPUFromUA(state, lower)
 	case strings.Contains(lower, "x11"):
-		state.SetOS("Desktop", "Unix", "")
+		state.SetOS(uaclass.Desktop, "Unix", "")
 	case state.BotMatched:
 		// leave unknown unless already set
 	}

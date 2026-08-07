@@ -7,6 +7,7 @@ import (
 
 	"github.com/deangrant/user-agent/internal/data"
 	"github.com/deangrant/user-agent/internal/detect"
+	"github.com/deangrant/user-agent/internal/uaclass"
 )
 
 // entry is a compiled app pattern ready for matching.
@@ -70,12 +71,12 @@ func (d *Detector) Detect(state *detect.State) {
 	// Generic Android WebView signal.
 	if strings.Contains(ua, "; wv)") || strings.Contains(ua, "; wv ") {
 		state.AppMatched = true
-		state.SetAgent("Browser Webview", "Android WebView", "")
+		state.SetAgent(uaclass.BrowserWebview, "Android WebView", "")
 	}
 }
 
 func isBrowserOnly(p *data.AppPattern) bool {
-	if p.AgentClass != "Browser" {
+	if p.AgentClass != uaclass.Browser {
 		return false
 	}
 	switch strings.ToLower(p.Name) {
@@ -111,16 +112,16 @@ func applyApp(state *detect.State, p *data.AppPattern) {
 	}
 	if state.EngineClass == "" {
 		switch p.AgentClass {
-		case "Mobile App":
-			state.EngineClass = "Mobile App"
-		case "Desktop App":
-			state.EngineClass = "Desktop App"
-		case "Browser Webview":
-			state.EngineClass = "Browser"
-		case "Voice":
-			state.EngineClass = "Special"
-		case "Email Client":
-			state.EngineClass = "Special"
+		case uaclass.MobileApp:
+			state.EngineClass = uaclass.MobileApp
+		case uaclass.DesktopApp:
+			state.EngineClass = uaclass.DesktopApp
+		case uaclass.BrowserWebview:
+			state.EngineClass = uaclass.Browser
+		case uaclass.Voice:
+			state.EngineClass = uaclass.Special
+		case uaclass.EmailClient:
+			state.EngineClass = uaclass.Special
 		}
 	}
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/deangrant/user-agent/internal/data"
 	"github.com/deangrant/user-agent/internal/detect"
+	"github.com/deangrant/user-agent/internal/uaclass"
 )
 
 // Detector identifies device class and brand/model.
@@ -27,7 +28,7 @@ func (d *Detector) Detect(state *detect.State) {
 	}
 	lower := strings.ToLower(state.UA)
 
-	if state.DeviceClass == "" || state.DeviceClass == "Unknown" {
+	if state.DeviceClass == "" || state.DeviceClass == uaclass.Unknown {
 		state.DeviceClass = d.classify(state, lower)
 	}
 	if state.DeviceBrand == "" || state.DeviceName == "" {
@@ -38,10 +39,12 @@ func (d *Detector) Detect(state *detect.State) {
 	}
 	// Refine phone vs tablet for Android.
 	if state.OSName == "Android" &&
-		(state.DeviceClass == "Mobile" || state.DeviceClass == "Phone" ||
-			state.DeviceClass == "Unknown" || state.DeviceClass == "") {
+		(state.DeviceClass == uaclass.Mobile ||
+			state.DeviceClass == uaclass.Phone ||
+			state.DeviceClass == uaclass.Unknown ||
+			state.DeviceClass == "") {
 		if strings.Contains(lower, "mobile") {
-			state.DeviceClass = "Phone"
+			state.DeviceClass = uaclass.Phone
 		}
 	}
 }
@@ -52,52 +55,52 @@ func (d *Detector) classify(state *detect.State, lower string) string {
 	}
 	switch {
 	case hasAll(lower, "googlebot", "mobile"):
-		return "Robot Mobile"
+		return uaclass.RobotMobile
 	case strings.Contains(lower, "iphone"):
-		return "Phone"
+		return uaclass.Phone
 	case strings.Contains(lower, "ipad"):
-		return "Tablet"
+		return uaclass.Tablet
 	case strings.Contains(lower, "ipod"):
-		return "Mobile"
+		return uaclass.Mobile
 	case hasAny(lower, "smart-tv", "smarttv", "hbbtv",
 		"bravia", "appletv", "googletv"):
-		return "TV"
+		return uaclass.TV
 	case hasAny(lower, "chromecast", "crkey", "roku"):
-		return "Set-top box"
+		return uaclass.SetTopBox
 	case containsToken(lower, "aft"):
-		return "Set-top box"
+		return uaclass.SetTopBox
 	case hasAny(lower, "playstation", "xbox", "nintendo"):
 		if hasAny(lower, "3ds", "new nintendo 3ds") {
-			return "Handheld Game Console"
+			return uaclass.HandheldGameConsole
 		}
-		return "Game Console"
+		return uaclass.GameConsole
 	case containsToken(lower, "watch"):
-		return "Watch"
+		return uaclass.Watch
 	case strings.Contains(lower, "tesla"):
-		return "Car"
+		return uaclass.Car
 	case hasAny(lower, "oculus", "quest"):
-		return "Virtual Reality"
+		return uaclass.VirtualReality
 	case strings.Contains(lower, "glass"):
-		return "Augmented Reality"
+		return uaclass.AugmentedReality
 	case hasAny(lower, "tablet", "kindle"):
-		return "Tablet"
+		return uaclass.Tablet
 	case hasAll(lower, "android", "mobile"):
-		return "Phone"
+		return uaclass.Phone
 	case strings.Contains(lower, "android"):
-		return "Phone"
+		return uaclass.Phone
 	case strings.Contains(lower, "windows phone"):
-		return "Phone"
+		return uaclass.Phone
 	case strings.Contains(lower, "mobile"):
-		return "Mobile"
+		return uaclass.Mobile
 	case hasAny(lower, "macintosh", "windows nt", "x11",
 		"cros ", "linux"):
-		return "Desktop"
-	case state.OSClass == "Desktop":
-		return "Desktop"
-	case state.OSClass == "Mobile":
-		return "Mobile"
+		return uaclass.Desktop
+	case state.OSClass == uaclass.Desktop:
+		return uaclass.Desktop
+	case state.OSClass == uaclass.Mobile:
+		return uaclass.Mobile
 	default:
-		return "Unknown"
+		return uaclass.Unknown
 	}
 }
 
@@ -165,9 +168,10 @@ func (d *Detector) applyBrand(state *detect.State, lower string) {
 			state.DeviceName = b.Name
 		}
 		if b.Class != "" &&
-			(state.DeviceClass == "" || state.DeviceClass == "Unknown" ||
-				state.DeviceClass == "Mobile" ||
-				(b.Class == "Tablet" && state.DeviceClass == "Phone")) {
+			(state.DeviceClass == "" || state.DeviceClass == uaclass.Unknown ||
+				state.DeviceClass == uaclass.Mobile ||
+				(b.Class == uaclass.Tablet &&
+					state.DeviceClass == uaclass.Phone)) {
 			state.DeviceClass = b.Class
 		}
 		return
@@ -197,7 +201,7 @@ func (d *Detector) extractAndroidModel(state *detect.State, lower string) {
 				if isPlausibleModel(model) {
 					state.DeviceName = model
 					if state.DeviceBrand == "" {
-						state.DeviceBrand = brandFromModel(model)
+						state.DeviceBrand = detect.BrandFromModel(model)
 					}
 					return
 				}
@@ -208,7 +212,7 @@ func (d *Detector) extractAndroidModel(state *detect.State, lower string) {
 		if isPlausibleModel(c) && !strings.Contains(cl, "android") {
 			state.DeviceName = c
 			if state.DeviceBrand == "" {
-				state.DeviceBrand = brandFromModel(c)
+				state.DeviceBrand = detect.BrandFromModel(c)
 			}
 			return
 		}
@@ -235,27 +239,4 @@ func isPlausibleModel(s string) bool {
 		}
 	}
 	return letters > 0
-}
-
-func brandFromModel(model string) string {
-	m := strings.ToLower(model)
-	switch {
-	case strings.HasPrefix(m, "pixel"), strings.HasPrefix(m, "nexus"):
-		return "Google"
-	case strings.HasPrefix(m, "sm-"), strings.HasPrefix(m, "gt-"):
-		return "Samsung"
-	case strings.HasPrefix(m, "moto"):
-		return "Motorola"
-	case strings.HasPrefix(m, "nokia"):
-		return "Nokia"
-	case strings.HasPrefix(m, "redmi"), strings.HasPrefix(m, "mi "),
-		strings.HasPrefix(m, "poco"):
-		return "Xiaomi"
-	case strings.HasPrefix(m, "oneplus"):
-		return "OnePlus"
-	case strings.HasPrefix(m, "huawei"):
-		return "Huawei"
-	default:
-		return ""
-	}
 }

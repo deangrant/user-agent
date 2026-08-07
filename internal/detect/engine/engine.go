@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/deangrant/user-agent/internal/detect"
+	"github.com/deangrant/user-agent/internal/uaclass"
 )
 
 // Detector identifies the layout engine.
@@ -68,7 +69,7 @@ func (d *Detector) Detect(state *detect.State) {
 		state.SetEngine(engineClass(state), "NetFront", p.Version)
 	default:
 		if state.EngineClass == "" {
-			state.EngineClass = "Unknown"
+			state.EngineClass = uaclass.Unknown
 		}
 	}
 }
@@ -113,19 +114,22 @@ func engineClass(state *detect.State) string {
 		return state.EngineClass
 	}
 	switch state.AgentClass {
-	case "Mobile App":
-		return "Mobile App"
-	case "Desktop App":
-		return "Desktop App"
-	case "Robot", "Robot Mobile":
-		return "Robot"
-	case "Hacker":
-		return "Hacker"
-	case "Server", "Cloud Application":
-		return "Cloud"
-	case "Voice", "Email Client", "Special", "Testclient":
-		return "Special"
+	case uaclass.MobileApp:
+		return uaclass.MobileApp
+	case uaclass.DesktopApp:
+		return uaclass.DesktopApp
+	case uaclass.Robot, uaclass.RobotMobile:
+		return uaclass.Robot
+	case uaclass.Hacker:
+		return uaclass.Hacker
+	case uaclass.Server, uaclass.CloudApp:
+		return uaclass.Cloud
+	case uaclass.Voice,
+		uaclass.EmailClient,
+		uaclass.Special,
+		uaclass.TestClient:
+		return uaclass.Special
 	default:
-		return "Browser"
+		return uaclass.Browser
 	}
 }
