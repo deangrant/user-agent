@@ -167,3 +167,52 @@ func TestShouldOverrideAgent(t *testing.T) {
 		}
 	}
 }
+
+func TestApplyPreservesIPadOSAgainstIOSPlatform(t *testing.T) {
+	state := &detect.State{
+		OSName:    "iPadOS",
+		OSVersion: "17.0",
+		OSClass:   "Mobile",
+		Hints: hintparse.Hints{
+			Platform:        "iOS",
+			PlatformVersion: "17.2.0",
+		},
+	}
+	Apply(state)
+	if state.OSName != "iPadOS" {
+		t.Fatalf("os = %q, want iPadOS", state.OSName)
+	}
+	if state.OSVersion != "17.2.0" {
+		t.Fatalf("version = %q, want 17.2.0", state.OSVersion)
+	}
+}
+
+func TestApplyPlatformIPadOS(t *testing.T) {
+	state := &detect.State{
+		Hints: hintparse.Hints{
+			Platform:        "iPadOS",
+			PlatformVersion: "17.2.0",
+		},
+	}
+	Apply(state)
+	if state.OSName != "iPadOS" {
+		t.Fatalf("os = %q, want iPadOS", state.OSName)
+	}
+}
+
+func TestApplyIOSPlatformWithIPadModel(t *testing.T) {
+	state := &detect.State{
+		Hints: hintparse.Hints{
+			Platform:        "iOS",
+			PlatformVersion: "17.2.0",
+			Model:           "iPad",
+		},
+	}
+	Apply(state)
+	if state.OSName != "iPadOS" {
+		t.Fatalf("os = %q, want iPadOS", state.OSName)
+	}
+	if state.DeviceName != "iPad" {
+		t.Fatalf("device = %q, want iPad", state.DeviceName)
+	}
+}

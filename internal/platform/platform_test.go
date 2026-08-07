@@ -34,3 +34,29 @@ func TestMapWindowsNT(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestResolveFromCHIPadOS(t *testing.T) {
+	name, ver, class := platform.ResolveFromCH("iPadOS", "17.2.0")
+	if name != "iPadOS" {
+		t.Fatalf("name = %q, want iPadOS", name)
+	}
+	if ver != "17.2.0" {
+		t.Fatalf("ver = %q, want 17.2.0", ver)
+	}
+	if class != "Mobile" {
+		t.Fatalf("class = %q, want Mobile", class)
+	}
+}
+
+func TestResolveFromCHIOS(t *testing.T) {
+	name, ver, class := platform.ResolveFromCH("iOS", "17.2.0")
+	if name != "iOS" {
+		t.Fatalf("name = %q, want iOS", name)
+	}
+	if ver != "17.2.0" {
+		t.Fatalf("ver = %q, want 17.2.0", ver)
+	}
+	if class != "Mobile" {
+		t.Fatalf("class = %q, want Mobile", class)
+	}
+}

@@ -18,6 +18,7 @@ func Apply(state *detect.State) {
 	applyAgentHints(state)
 	applyOSHints(state)
 	applyDeviceHints(state)
+	refineIPadOS(state)
 	applyCPUHints(state)
 	finalizeDerived(state)
 }
@@ -107,14 +108,41 @@ func applyOSHints(state *detect.State) {
 		return
 	}
 	name, ver, class := platform.ResolveFromCH(h.Platform, h.PlatformVersion)
+	if name == "iOS" && preferIPadOS(state) {
+		name = "iPadOS"
+	}
 	if name != "" {
-		state.OSName = name
+		// Keep UA-derived iPadOS when CH reports the broader iOS platform.
+		if state.OSName != "iPadOS" || name != "iOS" {
+			state.OSName = name
+		}
 	}
 	if ver != "" {
 		state.OSVersion = ver
 	}
 	if class != "" && (state.OSClass == "" || state.OSClass == "Unknown") {
 		state.OSClass = class
+	}
+}
+
+// preferIPadOS reports whether hints or device fields already indicate an iPad.
+func preferIPadOS(state *detect.State) bool {
+	if strings.Contains(strings.ToLower(state.Hints.Model), "ipad") {
+		return true
+	}
+	if strings.Contains(strings.ToLower(state.DeviceName), "ipad") {
+		return true
+	}
+	return false
+}
+
+// refineIPadOS promotes iOS to iPadOS after device model hints are applied.
+func refineIPadOS(state *detect.State) {
+	if state.OSName != "iOS" {
+		return
+	}
+	if preferIPadOS(state) {
+		state.OSName = "iPadOS"
 	}
 }
 

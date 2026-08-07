@@ -81,9 +81,12 @@ func ResolveFromCH(platform, platformVersion string) (name, ver, class string) {
 			return "Android", "", "Mobile"
 		}
 		return "Android", version.FirstNumber(ver), "Mobile"
-	case "ios", "ipados":
+	case "ios":
 		ver = strings.TrimSpace(platformVersion)
 		return "iOS", version.NormalizeSeparators(ver), "Mobile"
+	case "ipados":
+		ver = strings.TrimSpace(platformVersion)
+		return "iPadOS", version.NormalizeSeparators(ver), "Mobile"
 	case "linux":
 		return "Linux", strings.TrimSpace(platformVersion), "Desktop"
 	case "chrome os", "chromeos":
