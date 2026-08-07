@@ -15,6 +15,11 @@ import (
 	"github.com/deangrant/user-agent/useragent"
 )
 
+const (
+	maxUABytes          = 8 << 10  // 8 KiB
+	maxHeaderInputBytes = 64 << 10 // 64 KiB
+)
+
 // parseFlags holds CLI options for the parse subcommand.
 type parseFlags struct {
 	json    bool
@@ -88,6 +93,9 @@ func runParse(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 		applyHintFlags(h, f)
 		result = useragent.ParseHeaders(h)
 	default:
+		if err := checkUALength(pos[0]); err != nil {
+			return err
+		}
 		h := http.Header{}
 		h.Set("User-Agent", pos[0])
 		applyHintFlags(h, f)
@@ -116,9 +124,14 @@ func applyHintFlags(h http.Header, f parseFlags) {
 // headersFromReader parses MIME-style HTTP headers from r until a blank
 // line or EOF.
 func headersFromReader(r io.Reader) (http.Header, error) {
-	raw, err := io.ReadAll(r)
+	limited := io.LimitReader(r, int64(maxHeaderInputBytes)+1)
+	raw, err := io.ReadAll(limited)
 	if err != nil {
 		return nil, fmt.Errorf("read headers: %w", err)
+	}
+	if len(raw) > maxHeaderInputBytes {
+		return nil, fmt.Errorf(
+			"stdin input exceeds %d bytes", maxHeaderInputBytes)
 	}
 	br := bufio.NewReader(strings.NewReader(normalizeHeaderBlock(string(raw))))
 	tp := textproto.NewReader(br)
@@ -130,7 +143,17 @@ func headersFromReader(r io.Reader) (http.Header, error) {
 	if len(h) == 0 {
 		return nil, &usageError{msg: "stdin contained no headers"}
 	}
+	if err := checkUALength(h.Get("User-Agent")); err != nil {
+		return nil, err
+	}
 	return h, nil
+}
+
+func checkUALength(ua string) error {
+	if len(ua) > maxUABytes {
+		return fmt.Errorf("user-agent exceeds %d bytes", maxUABytes)
+	}
+	return nil
 }
 
 func writeResult(

@@ -241,3 +241,55 @@ func TestRunMissingSubcommand(t *testing.T) {
 		t.Fatalf("err = %T %v", err, err)
 	}
 }
+
+func TestRunParseRejectsOversizedUA(t *testing.T) {
+	ua := strings.Repeat("a", maxUABytes+1)
+	var stdout, stderr bytes.Buffer
+	err := run([]string{"parse", ua},
+		strings.NewReader(""), &stdout, &stderr)
+	if err == nil {
+		t.Fatal("want error for oversized user-agent")
+	}
+	if !strings.Contains(err.Error(), "user-agent exceeds") {
+		t.Fatalf("err = %v, want user-agent exceeds", err)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("unexpected stdout: %q", stdout.String())
+	}
+}
+
+func TestRunParseRejectsOversizedStdin(t *testing.T) {
+	input := strings.Repeat("x", maxHeaderInputBytes+1)
+	var stdout, stderr bytes.Buffer
+	err := run([]string{"parse", "-"},
+		strings.NewReader(input), &stdout, &stderr)
+	if err == nil {
+		t.Fatal("want error for oversized stdin")
+	}
+	if !strings.Contains(err.Error(), "stdin input exceeds") {
+		t.Fatalf("err = %v, want stdin input exceeds", err)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("unexpected stdout: %q", stdout.String())
+	}
+}
+
+func TestRunParseRejectsOversizedUAHeader(t *testing.T) {
+	ua := strings.Repeat("b", maxUABytes+1)
+	input := "User-Agent: " + ua + "\n"
+	if len(input) > maxHeaderInputBytes {
+		t.Fatal("test setup: header block exceeds stdin cap")
+	}
+	var stdout, stderr bytes.Buffer
+	err := run([]string{"parse", "-"},
+		strings.NewReader(input), &stdout, &stderr)
+	if err == nil {
+		t.Fatal("want error for oversized User-Agent header")
+	}
+	if !strings.Contains(err.Error(), "user-agent exceeds") {
+		t.Fatalf("err = %v, want user-agent exceeds", err)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("unexpected stdout: %q", stdout.String())
+	}
+}
