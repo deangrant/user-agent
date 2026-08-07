@@ -85,6 +85,10 @@ Accept-CH: Sec-CH-UA, Sec-CH-UA-Arch, Sec-CH-UA-Bitness, Sec-CH-UA-Form-Factors,
 | Agent | Class, Name, Version, VersionMajor, NameVersion, NameVersionMajor |
 | (top-level) | UserAgent, AgentSecurity, ClientHintsMismatch |
 
+`LayoutEngine.Name` is the rendering engine (`Blink`, `WebKit`, `Gecko`, …)
+when detectable. For bots, apps, and HTTP libraries without a layout engine
+in the UA, Name may be empty—use `LayoutEngine.Class` and `Agent` instead.
+
 Convenience helpers: `IsMobile`, `IsTablet`, `IsPhone`, `IsDesktop`,
 `IsComputer`, `IsBot`. `IsBot` covers crawlers and non-browser clients
 such as HTTP libraries (curl, okhttp), cloud apps, hacker tools, and

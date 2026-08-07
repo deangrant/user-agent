@@ -238,6 +238,12 @@ func TestParseGooglebot(t *testing.T) {
 	if r.Device.Class != useragent.DeviceClassRobot {
 		t.Fatalf("device = %q", r.Device.Class)
 	}
+	if r.LayoutEngine.Class != useragent.EngineClassRobot {
+		t.Fatalf("engine class = %q, want Robot", r.LayoutEngine.Class)
+	}
+	if r.LayoutEngine.Name != "" {
+		t.Fatalf("engine name = %q, want empty", r.LayoutEngine.Name)
+	}
 }
 
 func TestParseCurlIsBot(t *testing.T) {
@@ -248,6 +254,12 @@ func TestParseCurlIsBot(t *testing.T) {
 	}
 	if r.Agent.Class != useragent.AgentClassServer {
 		t.Fatalf("agent class = %q, want Server", r.Agent.Class)
+	}
+	if r.LayoutEngine.Class != useragent.EngineClassCloud {
+		t.Fatalf("engine class = %q, want Cloud", r.LayoutEngine.Class)
+	}
+	if r.LayoutEngine.Name != "" {
+		t.Fatalf("engine name = %q, want empty", r.LayoutEngine.Name)
 	}
 }
 

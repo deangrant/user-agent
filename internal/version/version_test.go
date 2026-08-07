@@ -17,3 +17,26 @@ func TestMajorAndNameVersion(t *testing.T) {
 		t.Fatalf("Normalize = %q", got)
 	}
 }
+
+func TestCompareMajor(t *testing.T) {
+	tests := []struct {
+		a, b string
+		want int
+	}{
+		{"120.0.0.0", "120.0.6099.109", 0},
+		{"119.0.0.0", "120.0.0.0", -1},
+		{"121.0.0.0", "120.0.0.0", 1},
+		{"N/A", "120.0.0.0", 0},
+		{"120.0.0.0", "N/A", 0},
+		{"abc", "def", 0},
+		{"", "120", 0},
+		{"120", "", 0},
+		{"", "", 0},
+	}
+	for _, tt := range tests {
+		if got := version.CompareMajor(tt.a, tt.b); got != tt.want {
+			t.Fatalf("CompareMajor(%q, %q) = %d, want %d",
+				tt.a, tt.b, got, tt.want)
+		}
+	}
+}

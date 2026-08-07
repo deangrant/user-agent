@@ -72,10 +72,17 @@ func FirstNumber(s string) string {
 }
 
 // CompareMajor compares major version numbers as integers.
-// Returns -1, 0, 1. Non-numeric majors compare as 0.
+// Returns -1, 0, or 1. If either side has no numeric major,
+// the values are incomparable and the result is 0 (no ordering
+// signal), so callers do not treat junk like "N/A" as major 0.
 func CompareMajor(a, b string) int {
-	ai := atoi(Major(a))
-	bi := atoi(Major(b))
+	as := Major(a)
+	bs := Major(b)
+	if as == "" || bs == "" {
+		return 0
+	}
+	ai := atoi(as)
+	bi := atoi(bs)
 	switch {
 	case ai < bi:
 		return -1

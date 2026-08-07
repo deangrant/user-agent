@@ -31,6 +31,24 @@ func TestApplyUpgradesFrozenChromeVersion(t *testing.T) {
 	}
 }
 
+func TestApplyKeepsNumericVersionAgainstNonNumericHints(t *testing.T) {
+	state := &detect.State{
+		AgentName:    "Chrome",
+		AgentVersion: "120.0.6099.109",
+		AgentClass:   "Browser",
+		Hints: hintparse.Hints{
+			FullVersionList: []hintparse.BrandVersion{
+				{Brand: "Google Chrome", Version: "N/A"},
+				{Brand: "Chromium", Version: "N/A"},
+			},
+		},
+	}
+	Apply(state)
+	if state.AgentVersion != "120.0.6099.109" {
+		t.Fatalf("version = %q, want 120.0.6099.109", state.AgentVersion)
+	}
+}
+
 func TestApplyKeepsSafariAgainstChromeHints(t *testing.T) {
 	state := &detect.State{
 		AgentName:  "Safari",
