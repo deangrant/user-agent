@@ -222,6 +222,39 @@ func TestParseGooglebot(t *testing.T) {
 	}
 }
 
+func TestParseCurlIsBot(t *testing.T) {
+	r := useragent.Parse("curl/7.68.0")
+	if !r.IsBot() {
+		t.Fatalf("IsBot = false, want true; agent=%#v device=%#v",
+			r.Agent, r.Device)
+	}
+	if r.Agent.Class != useragent.AgentClassServer {
+		t.Fatalf("agent class = %q, want Server", r.Agent.Class)
+	}
+}
+
+func TestParseOkHttpIsBot(t *testing.T) {
+	r := useragent.Parse("okhttp/4.9.3")
+	if !r.IsBot() {
+		t.Fatalf("IsBot = false, want true; agent=%#v device=%#v",
+			r.Agent, r.Device)
+	}
+	if r.Agent.Class != useragent.AgentClassServer {
+		t.Fatalf("agent class = %q, want Server", r.Agent.Class)
+	}
+}
+
+func TestParseSqlmapIsBot(t *testing.T) {
+	r := useragent.Parse("sqlmap/1.4.2#stable (http://sqlmap.org)")
+	if !r.IsBot() {
+		t.Fatalf("IsBot = false, want true; agent=%#v device=%#v",
+			r.Agent, r.Device)
+	}
+	if r.Agent.Class != useragent.AgentClassHacker {
+		t.Fatalf("agent class = %q, want Hacker", r.Agent.Class)
+	}
+}
+
 func TestParseEdge(t *testing.T) {
 	ua := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
 		"(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"

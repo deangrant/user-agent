@@ -77,7 +77,9 @@ Accept-CH: Sec-CH-UA, Sec-CH-UA-Arch, Sec-CH-UA-Bitness, Sec-CH-UA-Form-Factors,
 | Agent | Class, Name, Version, VersionMajor, NameVersion, NameVersionMajor |
 
 Convenience helpers: `IsMobile`, `IsTablet`, `IsPhone`, `IsDesktop`,
-`IsComputer`, `IsBot`.
+`IsComputer`, `IsBot`. `IsBot` covers crawlers and non-browser clients
+such as HTTP libraries (curl, okhttp), cloud apps, hacker tools, and
+test clients—not only robots.
 
 Unknown values use empty strings and `*Unknown` class constants. Parsing
 never returns an error; partial results are normal for sparse inputs.

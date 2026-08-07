@@ -169,15 +169,21 @@ func (r Result) IsPhone() bool {
 	return r.Device.Class == DeviceClassPhone
 }
 
-// IsBot reports whether the agent or device is a robot/crawler.
+// IsBot reports whether the agent or device looks like non-browser
+// automation: robots/crawlers, HTTP libraries and other server clients,
+// cloud applications, hacker tools, or test clients. Intended for
+// abuse and security filtering as well as crawler detection.
 func (r Result) IsBot() bool {
 	switch r.Device.Class {
 	case DeviceClassRobot, DeviceClassRobotMobile,
-		DeviceClassRobotImitator:
+		DeviceClassRobotImitator, DeviceClassCloud,
+		DeviceClassHacker:
 		return true
 	}
 	switch r.Agent.Class {
-	case AgentClassRobot, AgentClassRobotMobile:
+	case AgentClassRobot, AgentClassRobotMobile,
+		AgentClassServer, AgentClassCloudApp,
+		AgentClassHacker, AgentClassTestClient:
 		return true
 	}
 	return false
